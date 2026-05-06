@@ -1,0 +1,175 @@
+/* ============================================
+   RE-FOOD Global Theme — Dark Mode & Font Size
+   Taruh di: public/css/refood-theme.css
+   ============================================ */
+
+/* ── FONT SIZE ─────────────────────────────── */
+html.font-small  { font-size: 13px !important; }
+html.font-medium { font-size: 15px !important; }
+html.font-large  { font-size: 17px !important; }
+
+/* ── DARK MODE BASE ────────────────────────── */
+html.dark {
+    --bg:      #0f172a;
+    --border:  #1e293b;
+    --text:    #e2e8f0;
+    --muted:   #94a3b8;
+    --card-bg: #1e293b;
+}
+
+/* Body & background */
+html.dark body { background: #0f172a; color: #e2e8f0; }
+
+/* Sidebar */
+html.dark .sidebar { background: #14532d !important; }
+
+/* Topbar */
+html.dark .topbar {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+html.dark .topbar-title { color: #e2e8f0 !important; }
+
+/* Admin badge */
+html.dark .admin-badge {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+
+/* Cards / white boxes */
+html.dark .table-card,
+html.dark .stat-card-white,
+html.dark .detail-card,
+html.dark .form-card,
+html.dark .section-card,
+html.dark .filter-bar,
+html.dark .settings-card,
+html.dark .chart-card,
+html.dark .receiver-card,
+html.dark .donor-card,
+html.dark .dcard,
+html.dark .kanban-col,
+html.dark .tracking-card,
+html.dark .perf-card,
+html.dark .pagination-section {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+}
+
+/* Table */
+html.dark table thead th {
+    background: #0f172a !important;
+    color: #94a3b8 !important;
+    border-color: #334155 !important;
+}
+html.dark table tbody tr {
+    border-color: #334155 !important;
+}
+html.dark table tbody tr:hover { background: #1e293b !important; }
+html.dark table tbody td { color: #e2e8f0 !important; }
+
+/* Inputs & selects */
+html.dark input,
+html.dark select,
+html.dark textarea,
+html.dark .form-input,
+html.dark .field-input,
+html.dark .field-select,
+html.dark .filter-select,
+html.dark .sort-select,
+html.dark .search-box {
+    background: #0f172a !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+html.dark .search-box input { color: #e2e8f0 !important; background: transparent !important; }
+html.dark input::placeholder,
+html.dark textarea::placeholder { color: #64748b !important; }
+
+/* Borders & dividers */
+html.dark .table-card-header,
+html.dark .section-header,
+html.dark .form-card-header,
+html.dark .detail-header,
+html.dark .detail-footer,
+html.dark .top-section,
+html.dark .details-section,
+html.dark .note-section,
+html.dark .foods-section,
+html.dark .deliveries-section,
+html.dark .actions-section,
+html.dark .rc-divider,
+html.dark .donor-card-actions,
+html.dark .kanban-header,
+html.dark .kanban-add,
+html.dark .bottom-section .section-card {
+    border-color: #334155 !important;
+}
+
+/* Text colors */
+html.dark .td-food,
+html.dark .td-name,
+html.dark .donor-name,
+html.dark .rc-name,
+html.dark .dcard-name,
+html.dark .vol-name,
+html.dark .detail-header h2,
+html.dark .table-card-header h3,
+html.dark .section-header h3,
+html.dark .form-card-header h3 {
+    color: #e2e8f0 !important;
+}
+html.dark .td-muted,
+html.dark .td-name.td-muted,
+html.dark .rc-pic,
+html.dark .donor-row,
+html.dark .dcard-row,
+html.dark .tr-row,
+html.dark .stat-card-label { color: #94a3b8 !important; }
+
+/* Pagination */
+html.dark .page-btn {
+    background: #1e293b !important;
+    border-color: #334155 !important;
+    color: #e2e8f0 !important;
+}
+html.dark .page-btn.active { background: #2e7d32 !important; color: #fff !important; }
+html.dark .page-btn:hover  { background: #334155 !important; }
+
+/* Delivery cards */
+html.dark .delivery-card { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .delivery-card:hover { background: #263147 !important; }
+
+/* Kanban */
+html.dark .k-pending .kanban-header   { background: #1c1a0f !important; }
+html.dark .k-ondelivery .kanban-header { background: #1c1208 !important; }
+html.dark .k-delivered .kanban-header  { background: #0f1c10 !important; }
+html.dark .k-failed .kanban-header     { background: #1c0f0f !important; }
+
+/* Modal */
+html.dark .modal { background: #1e293b !important; }
+html.dark .modal h3 { color: #e2e8f0 !important; border-color: #334155 !important; }
+html.dark .modal-footer-btns,
+html.dark .modal-footer { border-color: #334155 !important; }
+html.dark .btn-cancel-modal,
+html.dark .btn-cm { background: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+
+/* Settings specific */
+html.dark .settings-footer { background: #0f172a !important; border-color: #334155 !important; }
+html.dark .btn-cancel { background: #1e293b !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+html.dark .toggle-btn { background: #1e293b !important; color: #94a3b8 !important; }
+html.dark .appearance-toggle { border-color: #334155 !important; }
+
+/* Dropdown */
+html.dark .admin-dropdown { background: #1e293b !important; border-color: #334155 !important; }
+html.dark .dropdown-item { color: #e2e8f0 !important; }
+html.dark .dropdown-item:hover { background: #334155 !important; }
+html.dark .dropdown-divider { background: #334155 !important; }
+
+/* Note box, address value */
+html.dark .note-box,
+html.dark .address-value,
+html.dark .info-cell,
+html.dark .detail-item { background: #0f172a !important; border-color: #334155 !important; color: #e2e8f0 !important; }
+html.dark .info-grid { border-color: #334155 !important; }
