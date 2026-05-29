@@ -12,23 +12,33 @@ class DonorController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Donor::withCount('foods')->with(['foods'])->latest();
-    
+        $query = Donor::with(['foods'])->latest();
+
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
-    
-        $topDonor = Donor::withCount('foods')->orderByDesc('foods_count')->first();
-    
+
+        $allFoods = \App\Models\Food::whereNotNull('donor_id')->pluck('donor_id');
+        $topDonorId = $allFoods->countBy()->sortDesc()->keys()->first();
+        $topDonor = $topDonorId ? Donor::find($topDonorId) : null;
+        if ($topDonor) {
+            $topDonor->foods_count = $allFoods->countBy()[$topDonorId];
+        }
+
         $stats = [
             'total'           => Donor::count(),
-            'active'          => Donor::has('foods')->count(),
+            'active'          => $allFoods->unique()->count(),
             'total_donations' => \App\Models\Food::count(),
             'top_donor'       => $topDonor,
         ];
-    
+
+        $donors = $query->paginate(10);
+        foreach ($donors as $donor) {
+            $donor->foods_count = $donor->foods->count();
+        }
+
         return view('admin.donors.index', [
-            'donors' => $query->paginate(10),
+            'donors' => $donors,
             'stats'  => $stats,
         ]);
     }
@@ -50,13 +60,13 @@ class DonorController extends Controller
             ->with('success', 'Donor berhasil ditambahkan!');
     }
 
-        public function show(Donor $donor)
+    public function show(Donor $donor)
     {
         $donor->load([
             'foods' => fn($q) => $q->with(['receiver', 'deliveries'])->latest()
         ]);
-        $donor->loadCount('foods');
-    
+        $donor->foods_count = $donor->foods->count();
+
         return view('admin.donors.show', compact('donor'));
     }
 
@@ -84,9 +94,6 @@ class DonorController extends Controller
             ->with('success', 'Donor berhasil dihapus!');
     }
 
-    /**
-     * API: Riwayat donasi donor (dipanggil via AJAX di modal)
-     */
     public function history(Donor $donor)
     {
         $foods = Food::where('donor_id', $donor->id)
@@ -95,7 +102,7 @@ class DonorController extends Controller
             ->take(20)
             ->get();
 
-        $result = $foods->map(function($food) {
+        $result = $foods->map(function ($food) {
             $delivery = $food->deliveries->first();
             return [
                 'food_name' => $food->name,

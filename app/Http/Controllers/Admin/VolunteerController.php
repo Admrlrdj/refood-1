@@ -11,23 +11,33 @@ class VolunteerController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Volunteer::withCount('deliveries')->with(['deliveries'])->latest();
+        $query = Volunteer::with(['deliveries'])->latest();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $topVolunteer = Volunteer::withCount('deliveries')->orderByDesc('deliveries_count')->first();
+        $allDeliveries = \App\Models\Delivery::whereNotNull('volunteer_id')->pluck('volunteer_id');
+        $topVolId = $allDeliveries->countBy()->sortDesc()->keys()->first();
+        $topVolunteer = $topVolId ? Volunteer::find($topVolId) : null;
+        if ($topVolunteer) {
+            $topVolunteer->deliveries_count = $allDeliveries->countBy()[$topVolId];
+        }
 
         $stats = [
             'total'            => Volunteer::count(),
-            'active'           => Volunteer::has('deliveries')->count(),
+            'active'           => $allDeliveries->unique()->count(),
             'total_deliveries' => Delivery::count(),
             'top_volunteer'    => $topVolunteer,
         ];
 
+        $volunteers = $query->paginate(10);
+        foreach ($volunteers as $vol) {
+            $vol->deliveries_count = $vol->deliveries->count();
+        }
+
         return view('admin.volunteers.index', [
-            'volunteers' => $query->paginate(10),
+            'volunteers' => $volunteers,
             'stats'      => $stats,
         ]);
     }
@@ -51,9 +61,9 @@ class VolunteerController extends Controller
     public function show(Volunteer $volunteer)
     {
         $volunteer->load([
-            'deliveries' => fn($q) => $q->with(['food','donor','receiver'])->latest()
+            'deliveries' => fn($q) => $q->with(['food', 'donor', 'receiver'])->latest()
         ]);
-        $volunteer->loadCount('deliveries');
+        $volunteer->deliveries_count = $volunteer->deliveries->count();
 
         return view('admin.volunteers.show', compact('volunteer'));
     }

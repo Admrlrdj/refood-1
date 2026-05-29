@@ -9,25 +9,35 @@ use Illuminate\Http\Request;
 
 class ReceiverController extends Controller
 {
-        public function index(Request $request)
+    public function index(Request $request)
     {
-        $query = Receiver::withCount('deliveries')->with(['deliveries'])->latest();
-    
+        $query = Receiver::with(['deliveries'])->latest();
+
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%'.$request->search.'%');
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
-    
-        $topReceiver = Receiver::withCount('deliveries')->orderByDesc('deliveries_count')->first();
-    
+
+        $allDeliveries = \App\Models\Delivery::whereNotNull('receiver_id')->pluck('receiver_id');
+        $topReceiverId = $allDeliveries->countBy()->sortDesc()->keys()->first();
+        $topReceiver = $topReceiverId ? Receiver::find($topReceiverId) : null;
+        if ($topReceiver) {
+            $topReceiver->deliveries_count = $allDeliveries->countBy()[$topReceiverId];
+        }
+
         $stats = [
             'total'        => Receiver::count(),
-            'active'       => Receiver::has('deliveries')->count(),
-            'total_foods'  => \App\Models\Delivery::where('status','delivered')->count(),
+            'active'       => $allDeliveries->unique()->count(),
+            'total_foods'  => \App\Models\Delivery::where('status', 'delivered')->count(),
             'top_receiver' => $topReceiver,
         ];
-    
+
+        $receivers = $query->paginate(10);
+        foreach ($receivers as $receiver) {
+            $receiver->deliveries_count = $receiver->deliveries->count();
+        }
+
         return view('admin.receivers.index', [
-            'receivers' => $query->paginate(10),
+            'receivers' => $receivers,
             'stats'     => $stats,
         ]);
     }
@@ -52,10 +62,10 @@ class ReceiverController extends Controller
     public function show(Receiver $receiver)
     {
         $receiver->load([
-            'deliveries' => fn($q) => $q->with(['food','donor'])->latest()
+            'deliveries' => fn($q) => $q->with(['food', 'donor'])->latest()
         ]);
-        $receiver->loadCount('deliveries');
-    
+        $receiver->deliveries_count = $receiver->deliveries->count();
+
         return view('admin.receivers.show', compact('receiver'));
     }
 
@@ -81,13 +91,11 @@ class ReceiverController extends Controller
         return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil dihapus!');
     }
 
-    /** API: JSON data untuk edit modal */
     public function json(Receiver $receiver)
     {
         return response()->json($receiver);
     }
 
-    /** API: Detail + history untuk detail modal */
     public function detail(Receiver $receiver)
     {
         $history = Delivery::where('receiver_id', $receiver->id)
