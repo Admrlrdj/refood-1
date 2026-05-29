@@ -37,24 +37,24 @@ Route::prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [AdminDashboardController::class, 'index'])->name('dashboard');
 
         // Foods
-        Route::resource('foods', FoodController::class);
+        Route::resource('foods', FoodController::class)->except(['create', 'store']);
         Route::patch('/foods/{food}/mark-invalid', [FoodController::class, 'markInvalid'])->name('foods.mark-invalid');
 
         // Deliveries
-        Route::resource('deliveries', DeliveryController::class);
+        Route::resource('deliveries', DeliveryController::class)->except(['create', 'store']);
         Route::patch('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.update-status');
      
 
         // Donors
-        Route::resource('donors', DonorController::class);
+        Route::resource('donors', DonorController::class)->except(['create', 'store']);
         Route::get('/donors/{donor}/history', [DonorController::class, 'history'])->name('donors.history');
      
         // Receivers
-        Route::resource('receivers', ReceiverController::class);
+        Route::resource('receivers', ReceiverController::class)->except(['create', 'store']);
         Route::get('/receivers/{receiver}/json',   [ReceiverController::class, 'json'])  ->name('receivers.json');
         Route::get('/receivers/{receiver}/detail', [ReceiverController::class, 'detail'])->name('receivers.detail');
         // Volunteers
-        Route::resource('volunteers', VolunteerController::class);
+        Route::resource('volunteers', VolunteerController::class)->except(['create', 'store']);
 
         // Reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Volunteer extends Model
 {
     use HasFactory;
 
+    protected $connection = 'mongodb';
+    
     protected $fillable = [
         'name', 'phone', 'email',
         'address', 'vehicle_type', 'vehicle_plate',

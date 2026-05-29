@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use MongoDB\Laravel\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class Admin extends Authenticatable
 {
     use Notifiable;
+
+    protected $connection = 'mongodb';
 
     protected $fillable = [
         'name',

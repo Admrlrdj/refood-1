@@ -81,22 +81,6 @@
         .page-btn.arrow { color:var(--muted); }
         .page-dots { color:var(--muted); font-size:0.82rem; }
 
-        /* MODAL TAMBAH */
-        .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45); z-index:500; align-items:center; justify-content:center; padding:20px; }
-        .modal-overlay.open { display:flex; }
-        .modal { background:#fff; border-radius:14px; padding:26px; max-width:500px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.18); max-height:90vh; overflow-y:auto; }
-        .modal h3 { font-size:1rem; font-weight:800; margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid var(--border); }
-        .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-        .form-group { display:flex; flex-direction:column; gap:5px; }
-        .form-group.full { grid-column:1/-1; }
-        .form-group label { font-size:0.73rem; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:.4px; }
-        .form-group input, .form-group select, .form-group textarea { width:100%; background:#f8f9fb; border:1.5px solid var(--border); border-radius:8px; padding:10px 12px; font-family:inherit; font-size:0.87rem; color:var(--text); outline:none; transition:border-color .15s; }
-        .form-group input:focus, .form-group select:focus { border-color:#2e7d32; background:#fff; }
-        .form-group textarea { resize:vertical; min-height:68px; }
-        .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; padding-top:14px; border-top:1px solid var(--border); }
-        .btn-cancel-modal { padding:9px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; }
-        .btn-save-modal { padding:9px 20px; border-radius:8px; border:none; background:#2e7d32; color:#fff; font-family:inherit; font-size:0.85rem; font-weight:700; cursor:pointer; }
-
         .alert { padding:12px 16px; border-radius:8px; font-size:0.87rem; font-weight:500; display:flex; align-items:center; gap:10px; }
         .alert-success { background:#dcfce7; color:#16a34a; border:1px solid #bbf7d0; }
         .alert svg { width:16px; height:16px; }
@@ -197,10 +181,6 @@
         <div class="table-card">
             <div class="table-card-header">
                 <h3>Donor List</h3>
-                <button class="btn-add" onclick="openAddModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Tambah Donor
-                </button>
             </div>
             <table>
                 <thead>
@@ -266,58 +246,12 @@
     </div>
 </div>
 
-<!-- MODAL TAMBAH -->
-<div class="modal-overlay" id="addModal">
-    <div class="modal">
-        <h3>➕ Tambah Donor Baru</h3>
-        <form method="POST" action="{{ route('admin.donors.store') }}">
-            @csrf
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nama Donor *</label>
-                    <input type="text" name="name" placeholder="Nama lengkap / perusahaan" required>
-                </div>
-                <div class="form-group">
-                    <label>Tipe *</label>
-                    <select name="type" required>
-                        <option value="individual">Individual</option>
-                        <option value="corporate">Corporate</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Nama PIC</label>
-                    <input type="text" name="pic_name" placeholder="Penanggung jawab">
-                </div>
-                <div class="form-group">
-                    <label>No. Telepon</label>
-                    <input type="text" name="phone" placeholder="08xxxxxxxxxx">
-                </div>
-                <div class="form-group full">
-                    <label>Alamat</label>
-                    <textarea name="address" placeholder="Alamat lengkap..."></textarea>
-                </div>
-                <div class="form-group full">
-                    <label>Email</label>
-                    <input type="email" name="email" placeholder="email@contoh.com">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel-modal" onclick="closeAddModal()">Batal</button>
-                <button type="submit" class="btn-save-modal">Simpan</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 function toggleDropdown() { document.getElementById('adminDropdown').classList.toggle('open'); }
 document.addEventListener('click', function(e) {
     const btn = document.getElementById('adminBtn'), dd = document.getElementById('adminDropdown');
     if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('open');
 });
-function openAddModal()  { document.getElementById('addModal').classList.add('open'); }
-function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
-document.getElementById('addModal').addEventListener('click', function(e) { if(e.target===this) closeAddModal(); });
 </script>
 </body>
 </html>

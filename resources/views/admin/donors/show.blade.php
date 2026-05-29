@@ -238,20 +238,6 @@
                 </table>
             </div>
 
-            <!-- ACTION BUTTONS -->
-            <div class="detail-footer">
-                <a href="{{ route('admin.donors.index') }}" class="btn-edit">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
-                    Kembali
-                </a>
-                <form method="POST" action="{{ route('admin.donors.destroy', $donor) }}" onsubmit="return confirm('Yakin hapus donor ini?')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="btn-del">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
-                        Hapus Donor
-                    </button>
-                </form>
-            </div>
         </div>
     </div>
 </div>

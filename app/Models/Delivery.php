@@ -3,10 +3,13 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Delivery extends Model
 {
+
+    protected $connection = 'mongodb';
+
     protected $fillable = [
         'food_id', 'donor_id', 'receiver_id', 'volunteer_id',
         'status', 'pickup_time', 'eta_minutes', 'is_expiring', 'note', 'lat', 'lng',

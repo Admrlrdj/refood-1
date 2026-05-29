@@ -178,10 +178,6 @@
         <div class="table-card">
             <div class="table-card-header">
                 <h3>Volunteers List</h3>
-                <button class="btn-add" onclick="openAddModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Tambah Volunteer
-                </button>
             </div>
             <table>
                 <thead>
@@ -247,51 +243,6 @@
     </div>
 </div>
 
-<!-- MODAL TAMBAH -->
-<div class="modal-overlay" id="addModal">
-    <div class="modal">
-        <h3>➕ Tambah Volunteer Baru</h3>
-        <form method="POST" action="{{ route('admin.volunteers.store') }}">
-            @csrf
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nama Volunteer *</label>
-                    <input type="text" name="name" placeholder="Nama lengkap" required>
-                </div>
-                <div class="form-group">
-                    <label>No. Telepon</label>
-                    <input type="text" name="phone" placeholder="08xxxxxxxxxx">
-                </div>
-                <div class="form-group">
-                    <label>Jenis Kendaraan</label>
-                    <select name="vehicle_type">
-                        <option value="">-- Pilih --</option>
-                        <option value="Motorcycle">Motorcycle</option>
-                        <option value="Car">Car</option>
-                        <option value="Bicycle">Bicycle</option>
-                        <option value="On Foot">On Foot</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Plat Nomor</label>
-                    <input type="text" name="vehicle_plate" placeholder="B 1234 XYZ">
-                </div>
-                <div class="form-group full">
-                    <label>Email</label>
-                    <input type="email" name="email" placeholder="email@contoh.com">
-                </div>
-                <div class="form-group full">
-                    <label>Alamat</label>
-                    <input type="text" name="address" placeholder="Alamat domisili">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel-modal" onclick="closeAddModal()">Batal</button>
-                <button type="submit" class="btn-save-modal">Simpan</button>
-            </div>
-        </form>
-    </div>
-</div>
 
 <script>
 function toggleDropdown() { document.getElementById('adminDropdown').classList.toggle('open'); }
@@ -299,9 +250,6 @@ document.addEventListener('click', function(e) {
     const btn = document.getElementById('adminBtn'), dd = document.getElementById('adminDropdown');
     if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('open');
 });
-function openAddModal()  { document.getElementById('addModal').classList.add('open'); }
-function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
-document.getElementById('addModal').addEventListener('click', function(e) { if(e.target===this) closeAddModal(); });
 </script>
 </body>
 </html>

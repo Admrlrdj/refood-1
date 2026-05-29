@@ -92,8 +92,6 @@
         .form-group textarea { resize:vertical; min-height:68px; }
         .modal-footer { display:flex; gap:10px; justify-content:flex-end; margin-top:18px; padding-top:14px; border-top:1px solid var(--border); }
         .btn-cancel-modal { padding:9px 20px; border-radius:8px; border:1px solid var(--border); background:#fff; font-family:inherit; font-size:0.85rem; font-weight:600; cursor:pointer; }
-        .btn-save-modal { padding:9px 20px; border-radius:8px; border:none; background:#2e7d32; color:#fff; font-family:inherit; font-size:0.85rem; font-weight:700; cursor:pointer; }
-
         .alert { padding:12px 16px; border-radius:8px; font-size:0.87rem; font-weight:500; display:flex; align-items:center; gap:10px; }
         .alert-success { background:#dcfce7; color:#16a34a; border:1px solid #bbf7d0; }
         .alert svg { width:16px; height:16px; }
@@ -182,10 +180,6 @@
         <div class="table-card">
             <div class="table-card-header">
                 <h3>Receiver List</h3>
-                <button class="btn-add" onclick="openAddModal()">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Tambah Receiver
-                </button>
             </div>
             <table>
                 <thead>
@@ -251,65 +245,12 @@
     </div>
 </div>
 
-<!-- MODAL TAMBAH -->
-<div class="modal-overlay" id="addModal">
-    <div class="modal">
-        <h3>➕ Tambah Receiver Baru</h3>
-        <form method="POST" action="{{ route('admin.receivers.store') }}">
-            @csrf
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Nama Receiver *</label>
-                    <input type="text" name="name" placeholder="Nama lembaga / tempat" required>
-                </div>
-                <div class="form-group">
-                    <label>Tipe *</label>
-                    <select name="type" required>
-                        <option value="orphanage">Orphanage</option>
-                        <option value="foundation">Foundation</option>
-                        <option value="community">Community</option>
-                        <option value="school">School</option>
-                        <option value="other">Other</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Nama PIC</label>
-                    <input type="text" name="pic_name" placeholder="Penanggung jawab">
-                </div>
-                <div class="form-group">
-                    <label>No. Telepon</label>
-                    <input type="text" name="phone" placeholder="08xxxxxxxxxx">
-                </div>
-                <div class="form-group full">
-                    <label>Alamat</label>
-                    <textarea name="address" placeholder="Alamat lengkap..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Kapasitas (orang)</label>
-                    <input type="number" name="capacity_people" placeholder="50" min="1">
-                </div>
-                <div class="form-group">
-                    <label>Need Level (0-100)</label>
-                    <input type="number" name="need_level" placeholder="50" min="0" max="100" value="50">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-cancel-modal" onclick="closeAddModal()">Batal</button>
-                <button type="submit" class="btn-save-modal">Simpan</button>
-            </div>
-        </form>
-    </div>
-</div>
-
 <script>
 function toggleDropdown() { document.getElementById('adminDropdown').classList.toggle('open'); }
 document.addEventListener('click', function(e) {
     const btn = document.getElementById('adminBtn'), dd = document.getElementById('adminDropdown');
     if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('open');
 });
-function openAddModal()  { document.getElementById('addModal').classList.add('open'); }
-function closeAddModal() { document.getElementById('addModal').classList.remove('open'); }
-document.getElementById('addModal').addEventListener('click', function(e) { if(e.target===this) closeAddModal(); });
 </script>
 </body>
 </html>

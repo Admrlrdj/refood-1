@@ -113,6 +113,26 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
+        'mongodb' => [
+            'driver'   => 'mongodb',
+            'dsn'      => env('DB_URI', 'mongodb://127.0.0.1:27017'),
+            'database' => env('DB_DATABASE', 'adminlogin_db'),
+        ],
+
+        'mysql_lama' => [
+            'driver' => 'mysql',
+            'host' => env('DB_SQL_HOST', '127.0.0.1'),
+            'port' => env('DB_SQL_PORT', '3306'),
+            'database' => env('DB_SQL_DATABASE', 'forge'),
+            'username' => env('DB_SQL_USERNAME', 'forge'),
+            'password' => env('DB_SQL_PASSWORD', ''),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => true,
+            'engine' => null,
+        ],
+
     ],
 
     /*

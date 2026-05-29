@@ -4,10 +4,12 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use MongoDB\Laravel\Eloquent\Model;
 
 class Food extends Model
 {
+    protected $connection = 'mongodb';
+    
     use HasFactory;
     protected $table = 'foods';
     protected $fillable = [

@@ -178,10 +178,6 @@
                     <option value="invalid"   {{ request('status')=='invalid'   ? 'selected':'' }}>Invalid</option>
                 </select>
             </form>
-            <a href="{{ route('admin.foods.create') }}" class="btn-add">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                Tambah Food
-            </a>
         </div>
 
         <!-- TABLE: Food Item, Donor, Receiver, Date, Status, Action -->
