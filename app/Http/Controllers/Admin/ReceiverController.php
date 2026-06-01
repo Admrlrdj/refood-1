@@ -17,29 +17,18 @@ class ReceiverController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $allDeliveries = \App\Models\Delivery::whereNotNull('receiver_id')->pluck('receiver_id');
-        $topReceiverId = $allDeliveries->countBy()->sortDesc()->keys()->first();
-        $topReceiver = $topReceiverId ? Receiver::find($topReceiverId) : null;
-        if ($topReceiver) {
-            $topReceiver->deliveries_count = $allDeliveries->countBy()[$topReceiverId];
-        }
+        $receivers = $query->paginate(10);
+        $allReceivers = Receiver::with('deliveries')->get();
+        $topReceiver = $allReceivers->sortByDesc(fn($r) => $r->deliveries ? $r->deliveries->count() : 0)->first();
 
         $stats = [
             'total'        => Receiver::count(),
-            'active'       => $allDeliveries->unique()->count(),
-            'total_foods'  => \App\Models\Delivery::where('status', 'delivered')->count(),
+            'active'       => $allReceivers->filter(fn($r) => $r->deliveries && $r->deliveries->count() > 0)->count(),
+            'total_foods'  => Delivery::where('status', 'delivered')->count(),
             'top_receiver' => $topReceiver,
         ];
 
-        $receivers = $query->paginate(10);
-        foreach ($receivers as $receiver) {
-            $receiver->deliveries_count = $receiver->deliveries->count();
-        }
-
-        return view('admin.receivers.index', [
-            'receivers' => $receivers,
-            'stats'     => $stats,
-        ]);
+        return view('admin.receivers.index', compact('receivers', 'stats'));
     }
 
     public function store(Request $request)
@@ -59,18 +48,17 @@ class ReceiverController extends Controller
         return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil ditambahkan!');
     }
 
-    public function show(Receiver $receiver)
+    public function show($id)
     {
-        $receiver->load([
-            'deliveries' => fn($q) => $q->with(['food', 'donor'])->latest()
-        ]);
-        $receiver->deliveries_count = $receiver->deliveries->count();
+        $receiver = Receiver::findOrFail($id);
+        $receiver->load(['deliveries' => fn($q) => $q->with(['food', 'donor'])->latest()]);
 
         return view('admin.receivers.show', compact('receiver'));
     }
 
-    public function update(Request $request, Receiver $receiver)
+    public function update(Request $request, $id)
     {
+        $receiver = Receiver::findOrFail($id);
         $data = $request->validate([
             'name'            => 'required|string|max:255',
             'type'            => 'required|in:orphanage,foundation,community,school,other',
@@ -85,32 +73,28 @@ class ReceiverController extends Controller
         return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil diupdate!');
     }
 
-    public function destroy(Receiver $receiver)
+    public function destroy($id)
     {
-        $receiver->delete();
+        Receiver::findOrFail($id)->delete();
         return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil dihapus!');
     }
 
-    public function json(Receiver $receiver)
+    public function json($id)
     {
-        return response()->json($receiver);
+        return response()->json(Receiver::findOrFail($id));
     }
 
-    public function detail(Receiver $receiver)
+    public function detail($id)
     {
-        $history = Delivery::where('receiver_id', $receiver->id)
-            ->with('food')
-            ->latest()
-            ->take(10)
-            ->get()
+        $receiver = Receiver::findOrFail($id);
+        $history = Delivery::where('receiver_id', $id)
+            ->with('food')->latest()->take(10)->get()
             ->map(fn($d) => [
                 'food_name' => $d->food->name ?? '—',
                 'status'    => $d->status,
                 'date'      => $d->created_at->format('d M Y'),
             ]);
 
-        return response()->json(array_merge($receiver->toArray(), [
-            'history' => $history,
-        ]));
+        return response()->json(array_merge($receiver->toArray(), ['history' => $history]));
     }
 }

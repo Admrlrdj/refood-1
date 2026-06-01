@@ -17,29 +17,18 @@ class VolunteerController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $allDeliveries = \App\Models\Delivery::whereNotNull('volunteer_id')->pluck('volunteer_id');
-        $topVolId = $allDeliveries->countBy()->sortDesc()->keys()->first();
-        $topVolunteer = $topVolId ? Volunteer::find($topVolId) : null;
-        if ($topVolunteer) {
-            $topVolunteer->deliveries_count = $allDeliveries->countBy()[$topVolId];
-        }
+        $volunteers = $query->paginate(10);
+        $allVols = Volunteer::with('deliveries')->get();
+        $topVolunteer = $allVols->sortByDesc(fn($v) => $v->deliveries ? $v->deliveries->count() : 0)->first();
 
         $stats = [
             'total'            => Volunteer::count(),
-            'active'           => $allDeliveries->unique()->count(),
-            'total_deliveries' => Delivery::count(),
+            'active'           => $allVols->filter(fn($v) => $v->deliveries && $v->deliveries->count() > 0)->count(),
+            'total_deliveries' => Delivery::whereNotNull('volunteer_id')->count(),
             'top_volunteer'    => $topVolunteer,
         ];
 
-        $volunteers = $query->paginate(10);
-        foreach ($volunteers as $vol) {
-            $vol->deliveries_count = $vol->deliveries->count();
-        }
-
-        return view('admin.volunteers.index', [
-            'volunteers' => $volunteers,
-            'stats'      => $stats,
-        ]);
+        return view('admin.volunteers.index', compact('volunteers', 'stats'));
     }
 
     public function store(Request $request)
@@ -54,24 +43,20 @@ class VolunteerController extends Controller
         ]);
 
         Volunteer::create($data);
-        return redirect()->route('admin.volunteers.index')
-            ->with('success', 'Volunteer berhasil ditambahkan!');
+        return redirect()->route('admin.volunteers.index')->with('success', 'Volunteer berhasil ditambahkan!');
     }
 
-    public function show(Volunteer $volunteer)
+    public function show($id)
     {
-        $volunteer->load([
-            'deliveries' => fn($q) => $q->with(['food', 'donor', 'receiver'])->latest()
-        ]);
-        $volunteer->deliveries_count = $volunteer->deliveries->count();
+        $volunteer = Volunteer::findOrFail($id);
+        $volunteer->load(['deliveries' => fn($q) => $q->with(['food', 'donor', 'receiver'])->latest()]);
 
         return view('admin.volunteers.show', compact('volunteer'));
     }
 
-    public function destroy(Volunteer $volunteer)
+    public function destroy($id)
     {
-        $volunteer->delete();
-        return redirect()->route('admin.volunteers.index')
-            ->with('success', 'Volunteer berhasil dihapus!');
+        Volunteer::findOrFail($id)->delete();
+        return redirect()->route('admin.volunteers.index')->with('success', 'Volunteer berhasil dihapus!');
     }
 }

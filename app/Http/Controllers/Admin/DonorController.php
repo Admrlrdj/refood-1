@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Donor;
 use App\Models\Food;
-use App\Models\Delivery;
 use Illuminate\Http\Request;
 
 class DonorController extends Controller
@@ -18,29 +17,18 @@ class DonorController extends Controller
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $allFoods = \App\Models\Food::whereNotNull('donor_id')->pluck('donor_id');
-        $topDonorId = $allFoods->countBy()->sortDesc()->keys()->first();
-        $topDonor = $topDonorId ? Donor::find($topDonorId) : null;
-        if ($topDonor) {
-            $topDonor->foods_count = $allFoods->countBy()[$topDonorId];
-        }
+        $donors = $query->paginate(10);
+        $allDonors = Donor::with('foods')->get();
+        $topDonor = $allDonors->sortByDesc(fn($d) => $d->foods ? $d->foods->count() : 0)->first();
 
         $stats = [
             'total'           => Donor::count(),
-            'active'          => $allFoods->unique()->count(),
-            'total_donations' => \App\Models\Food::count(),
+            'active'          => $allDonors->filter(fn($d) => $d->foods && $d->foods->count() > 0)->count(),
+            'total_donations' => Food::count(),
             'top_donor'       => $topDonor,
         ];
 
-        $donors = $query->paginate(10);
-        foreach ($donors as $donor) {
-            $donor->foods_count = $donor->foods->count();
-        }
-
-        return view('admin.donors.index', [
-            'donors' => $donors,
-            'stats'  => $stats,
-        ]);
+        return view('admin.donors.index', compact('donors', 'stats'));
     }
 
     public function store(Request $request)
@@ -55,23 +43,20 @@ class DonorController extends Controller
         ]);
 
         Donor::create($data);
-
-        return redirect()->route('admin.donors.index')
-            ->with('success', 'Donor berhasil ditambahkan!');
+        return redirect()->route('admin.donors.index')->with('success', 'Donor berhasil ditambahkan!');
     }
 
-    public function show(Donor $donor)
+    public function show($id)
     {
-        $donor->load([
-            'foods' => fn($q) => $q->with(['receiver', 'deliveries'])->latest()
-        ]);
-        $donor->foods_count = $donor->foods->count();
+        $donor = Donor::findOrFail($id);
+        $donor->load(['foods' => fn($q) => $q->with(['receiver', 'deliveries'])->latest()]);
 
         return view('admin.donors.show', compact('donor'));
     }
 
-    public function update(Request $request, Donor $donor)
+    public function update(Request $request, $id)
     {
+        $donor = Donor::findOrFail($id);
         $data = $request->validate([
             'name'     => 'required|string|max:255',
             'type'     => 'required|in:individual,corporate',
@@ -82,26 +67,18 @@ class DonorController extends Controller
         ]);
 
         $donor->update($data);
-
-        return redirect()->route('admin.donors.index')
-            ->with('success', 'Donor berhasil diupdate!');
+        return redirect()->route('admin.donors.index')->with('success', 'Donor berhasil diupdate!');
     }
 
-    public function destroy(Donor $donor)
+    public function destroy($id)
     {
-        $donor->delete();
-        return redirect()->route('admin.donors.index')
-            ->with('success', 'Donor berhasil dihapus!');
+        Donor::findOrFail($id)->delete();
+        return redirect()->route('admin.donors.index')->with('success', 'Donor berhasil dihapus!');
     }
 
-    public function history(Donor $donor)
+    public function history($id)
     {
-        $foods = Food::where('donor_id', $donor->id)
-            ->with('deliveries')
-            ->latest()
-            ->take(20)
-            ->get();
-
+        $foods = Food::where('donor_id', $id)->with('deliveries')->latest()->take(20)->get();
         $result = $foods->map(function ($food) {
             $delivery = $food->deliveries->first();
             return [
@@ -110,7 +87,6 @@ class DonorController extends Controller
                 'date'      => $food->created_at->format('d M Y'),
             ];
         });
-
         return response()->json($result);
     }
 }
