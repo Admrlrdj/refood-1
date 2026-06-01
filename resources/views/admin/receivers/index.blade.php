@@ -786,11 +786,26 @@
                                     {{ $receiver->deliveries->last()?->created_at?->format('d M Y') ?? '-' }}
                                 </td>
                                 <td>
-                                    @if (($receiver->deliveries ? $receiver->deliveries->count() : 0) > 0)
-                                        <span class="badge-active"><span class="badge-dot"></span>Active</span>
-                                    @else
-                                        <span class="badge-inactive"><span class="badge-dot"></span>Inactive</span>
-                                    @endif
+                                    <div
+                                        style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
+                                        <!-- Status Approval Admin -->
+                                        @if ($receiver->is_verified)
+                                            <span class="badge-active"><span class="badge-dot"></span>Active</span>
+                                        @else
+                                            <span class="badge-inactive"
+                                                style="color: #dc2626; background: #fee2e2;"><span
+                                                    class="badge-dot"></span>Pending</span>
+                                        @endif
+
+                                        <!-- Status Login App (ON/OFF) -->
+                                        @if ($receiver->status === 'aktif' || $receiver->status === 'online')
+                                            <span class="badge-active"
+                                                style="background: #e0f2fe; color: #2563eb;"><span
+                                                    class="badge-dot"></span>ON</span>
+                                        @else
+                                            <span class="badge-inactive"><span class="badge-dot"></span>OFF</span>
+                                        @endif
+                                    </div>
                                 </td>
                                 <td>
                                     <a href="{{ route('admin.receivers.show', $receiver->_id) }}" class="btn-view">
