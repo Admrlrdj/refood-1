@@ -606,29 +606,168 @@
         </header>
 
         <div class="content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h2 style="font-size: 1.25rem; font-weight: 800;">Detail Penerima (Yayasan)</h2>
-                <a href="{{ route('admin.receivers.index') }}" class="btn-cancel-modal"
-                    style="text-decoration: none;">&larr; Kembali</a>
-            </div>
+            <style>
+                .profile-header {
+                    display: grid;
+                    grid-template-columns: 280px 1fr;
+                    gap: 30px;
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 12px;
+                    padding: 30px;
+                    margin-bottom: 24px;
+                }
 
-            <!-- PROFILE CARD -->
-            <div class="table-card"
-                style="padding: 24px; display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start;">
-                <div style="text-align: center; padding-right: 24px; border-right: 1px solid var(--border);">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($receiver->foundation_name ?? $receiver->name) }}&background=10B981&color=fff&size=100"
-                        style="border-radius: 50%; margin-bottom: 16px;">
-                    <h3 style="font-size: 1.2rem; font-weight: 800;">
-                        {{ $receiver->foundation_name ?? $receiver->name }}</h3>
-                    <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 16px;">PIC:
-                        {{ $receiver->name }}</p>
+                .profile-sidebar {
+                    text-align: center;
+                    border-right: 1px dashed var(--border);
+                    padding-right: 30px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
 
-                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                .profile-avatar {
+                    width: 110px;
+                    height: 110px;
+                    border-radius: 50%;
+                    border: 4px solid #f0fdf4;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+                    margin-bottom: 16px;
+                    object-fit: cover;
+                }
+
+                .profile-name {
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                    color: var(--text);
+                    margin-bottom: 4px;
+                    line-height: 1.2;
+                }
+
+                .profile-sub {
+                    font-size: 0.85rem;
+                    color: var(--muted);
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                }
+
+                .profile-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    margin-top: 24px;
+                    width: 100%;
+                }
+
+                .btn-verify {
+                    background: #16a34a;
+                    color: #fff;
+                    border: none;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: 0.2s;
+                    font-size: 0.85rem;
+                    width: 100%;
+                }
+
+                .btn-verify:hover {
+                    background: #15803d;
+                }
+
+                .btn-reject {
+                    background: #fff;
+                    color: #dc2626;
+                    border: 1px solid #fca5a5;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: 0.2s;
+                    font-size: 0.85rem;
+                    width: 100%;
+                }
+
+                .btn-reject:hover {
+                    background: #fef2f2;
+                }
+
+                .btn-back {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: var(--muted);
+                    text-decoration: none;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    transition: 0.2s;
+                    margin-bottom: 20px;
+                }
+
+                .btn-back:hover {
+                    color: var(--text);
+                }
+
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 20px;
+                    align-content: start;
+                }
+
+                .info-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .info-item.full {
+                    grid-column: 1 / -1;
+                }
+
+                .info-label {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: var(--muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .info-value {
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    color: var(--text);
+                    background: #f8f9fb;
+                    padding: 14px 16px;
+                    border-radius: 8px;
+                    border: 1px solid #edf1f5;
+                }
+            </style>
+
+            <a href="{{ route('admin.receivers.index') }}" class="btn-back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18"
+                    height="18">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Kembali ke Daftar Penerima
+            </a>
+
+            <div class="profile-header">
+                <div class="profile-sidebar">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode($receiver->foundation_name ?? $receiver->name) }}&background=10B981&color=fff&size=120"
+                        class="profile-avatar">
+                    <h3 class="profile-name">{{ $receiver->foundation_name ?? $receiver->name }}</h3>
+                    <p class="profile-sub">PIC: {{ $receiver->name }}</p>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
                         @if ($receiver->is_verified)
                             <span class="badge-active"><span class="badge-dot"></span>Terverifikasi</span>
                         @else
                             <span class="badge-inactive" style="color: #dc2626; background: #fee2e2;"><span
-                                    class="badge-dot"></span>Belum Verifikasi</span>
+                                    class="badge-dot"></span>Pending</span>
                         @endif
 
                         @if ($receiver->status === 'aktif' || $receiver->status === 'online')
@@ -639,72 +778,76 @@
                         @endif
                     </div>
 
-                    <!-- Admin Actions -->
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="profile-actions">
                         @if (!$receiver->is_verified)
                             <form action="{{ route('admin.receivers.verify', $receiver->_id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn-save-modal" style="width: 100%;">Setujui Akun
-                                    (Verify)</button>
+                                <button type="submit" class="btn-verify">Setujui Yayasan</button>
                             </form>
                         @else
                             <form action="{{ route('admin.receivers.reject', $receiver->_id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn-cancel-modal"
-                                    style="width: 100%; color: #dc2626; border-color: #fca5a5;">Cabut Verifikasi
-                                    (Reject)</button>
+                                <button type="submit" class="btn-reject">Cabut Verifikasi</button>
                             </form>
                         @endif
                     </div>
                 </div>
 
-                <!-- Right: Detailed Data -->
-                <div class="form-grid">
-                    <div class="form-group"><label>Email</label>
-                        <p style="font-weight: 600;">{{ $receiver->email ?? '-' }}</p>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">Email Address</div>
+                        <div class="info-value">{{ $receiver->email ?? '-' }}</div>
                     </div>
-                    <div class="form-group"><label>No. HP</label>
-                        <p style="font-weight: 600;">{{ $receiver->phone ?? '-' }}</p>
+                    <div class="info-item">
+                        <div class="info-label">No. Telepon</div>
+                        <div class="info-value">{{ $receiver->phone ?? '-' }}</div>
                     </div>
-                    <div class="form-group"><label>Kapasitas (Orang)</label>
-                        <p style="font-weight: 600;">{{ $receiver->capacity_people ?? 0 }} Orang</p>
+                    <div class="info-item">
+                        <div class="info-label">Kapasitas Panti</div>
+                        <div class="info-value">{{ $receiver->capacity_people ?? 0 }} Orang</div>
                     </div>
-                    <div class="form-group"><label>Tingkat Kebutuhan (Need Level)</label>
-                        <p style="color: #ea580c; font-weight: 800;">{{ $receiver->need_level ?? 0 }}%</p>
+                    <div class="info-item">
+                        <div class="info-label">Tingkat Kebutuhan</div>
+                        <div class="info-value" style="color: #ea580c;">{{ $receiver->need_level ?? 0 }}% Kritis
+                        </div>
                     </div>
-                    <div class="form-group full"><label>Alamat Lengkap</label>
-                        <p style="font-weight: 600;">{{ $receiver->address ?? '-' }}</p>
+                    <div class="info-item full">
+                        <div class="info-label">Alamat Lengkap</div>
+                        <div class="info-value">{{ $receiver->address ?? 'Belum ada alamat' }}</div>
                     </div>
-                    <div class="form-group"><label>Latitude (Lat)</label>
-                        <p style="font-weight: 600;">{{ $receiver->last_latitude ?? '-' }}</p>
+                    <div class="info-item">
+                        <div class="info-label">Latitude</div>
+                        <div class="info-value" style="font-family: monospace;">{{ $receiver->last_latitude ?? '-' }}
+                        </div>
                     </div>
-                    <div class="form-group"><label>Longitude (Lng)</label>
-                        <p style="font-weight: 600;">{{ $receiver->last_longitude ?? '-' }}</p>
+                    <div class="info-item">
+                        <div class="info-label">Longitude</div>
+                        <div class="info-value" style="font-family: monospace;">
+                            {{ $receiver->last_longitude ?? '-' }}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- HISTORY TABLE -->
             <div class="table-card">
                 <div class="table-card-header">
-                    <h3>Riwayat Penerimaan Donasi</h3>
+                    <h3>Riwayat Makanan Diterima</h3>
                 </div>
                 <table>
                     <thead>
                         <tr>
                             <th>ID Pengantaran</th>
-                            <th>Makanan</th>
-                            <th>Dari Donatur</th>
+                            <th>Makanan Diterima</th>
+                            <th>Asal Donatur</th>
                             <th>Status</th>
-                            <th>Tanggal</th>
+                            <th>Tanggal Diterima</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($receiver->deliveries ?? [] as $del)
                             <tr>
-                                <td class="td-muted">#{{ substr($del->_id, -6) }}</td>
-                                <td class="td-name">{{ $del->food->name ?? 'N/A' }}</td>
-                                <td>{{ $del->donor->restaurant_name ?? ($del->donor->name ?? 'N/A') }}</td>
+                                <td class="td-muted">#{{ strtoupper(substr($del->_id, -6)) }}</td>
+                                <td class="td-name">{{ $del->food->name ?? 'Data Terhapus' }}</td>
+                                <td>{{ $del->donor->restaurant_name ?? ($del->donor->name ?? '-') }}</td>
                                 <td>
                                     @if ($del->status === 'delivered')
                                         <span class="badge-active"><span class="badge-dot"></span>Selesai</span>
@@ -717,8 +860,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Belum
-                                    ada riwayat penerimaan.</td>
+                                <td colspan="5" style="text-align:center;padding:30px;color:var(--muted);">Belum
+                                    ada makanan yang diterima.</td>
                             </tr>
                         @endforelse
                     </tbody>

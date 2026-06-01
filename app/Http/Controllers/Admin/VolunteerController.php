@@ -59,4 +59,22 @@ class VolunteerController extends Controller
         Volunteer::findOrFail($id)->delete();
         return redirect()->route('admin.volunteers.index')->with('success', 'Volunteer berhasil dihapus!');
     }
+
+    public function verify($id)
+    {
+        $volunteer = Volunteer::findOrFail($id);
+        $volunteer->is_verified = true;
+        $volunteer->save();
+
+        return back()->with('success', 'Relawan berhasil diverifikasi!');
+    }
+
+    public function reject($id)
+    {
+        $volunteer = Volunteer::findOrFail($id);
+        $volunteer->is_verified = false;
+        $volunteer->save();
+
+        return back()->with('success', 'Status relawan diubah menjadi Ditolak/Belum Terverifikasi.');
+    }
 }

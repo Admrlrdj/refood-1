@@ -97,4 +97,22 @@ class ReceiverController extends Controller
 
         return response()->json(array_merge($receiver->toArray(), ['history' => $history]));
     }
+
+    public function verify($id)
+    {
+        $receiver = Receiver::findOrFail($id);
+        $receiver->is_verified = true;
+        $receiver->save();
+
+        return back()->with('success', 'Akun Yayasan berhasil diverifikasi!');
+    }
+
+    public function reject($id)
+    {
+        $receiver = Receiver::findOrFail($id);
+        $receiver->is_verified = false;
+        $receiver->save();
+
+        return back()->with('success', 'Status Yayasan diubah menjadi Belum Terverifikasi / Ditolak.');
+    }
 }

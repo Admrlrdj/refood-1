@@ -89,4 +89,22 @@ class DonorController extends Controller
         });
         return response()->json($result);
     }
+
+    public function verify($id)
+    {
+        $donor = Donor::findOrFail($id);
+        $donor->is_verified = true;
+        $donor->save();
+
+        return back()->with('success', 'Akun Donatur berhasil diverifikasi!');
+    }
+
+    public function reject($id)
+    {
+        $donor = Donor::findOrFail($id);
+        $donor->is_verified = false;
+        $donor->save();
+
+        return back()->with('success', 'Status Donatur diubah menjadi Belum Terverifikasi / Ditolak.');
+    }
 }

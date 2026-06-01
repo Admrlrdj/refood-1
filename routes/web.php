@@ -43,18 +43,26 @@ Route::prefix('admin')->name('admin.')->group(function () {
         // Deliveries
         Route::resource('deliveries', DeliveryController::class)->except(['create', 'store']);
         Route::patch('/deliveries/{delivery}/status', [DeliveryController::class, 'updateStatus'])->name('deliveries.update-status');
-     
 
-        // Donors
+
+        // ----------------- Donors -----------------
         Route::resource('donors', DonorController::class)->except(['create', 'store']);
-        Route::get('/donors/{donor}/history', [DonorController::class, 'history'])->name('donors.history');
-     
-        // Receivers
+        Route::get('/donors/{id}/history', [DonorController::class, 'history'])->name('donors.history');
+        Route::post('/donors/{id}/verify', [DonorController::class, 'verify'])->name('donors.verify');
+        Route::post('/donors/{id}/reject', [DonorController::class, 'reject'])->name('donors.reject');
+
+        // ----------------- Receivers -----------------
         Route::resource('receivers', ReceiverController::class)->except(['create', 'store']);
-        Route::get('/receivers/{receiver}/json',   [ReceiverController::class, 'json'])  ->name('receivers.json');
-        Route::get('/receivers/{receiver}/detail', [ReceiverController::class, 'detail'])->name('receivers.detail');
-        // Volunteers
+        Route::get('/receivers/{id}/json',   [ReceiverController::class, 'json'])->name('receivers.json');
+        Route::get('/receivers/{id}/detail', [ReceiverController::class, 'detail'])->name('receivers.detail');
+        Route::post('/receivers/{id}/verify', [ReceiverController::class, 'verify'])->name('receivers.verify');
+        Route::post('/receivers/{id}/reject', [ReceiverController::class, 'reject'])->name('receivers.reject');
+
+        // ----------------- Volunteers -----------------
         Route::resource('volunteers', VolunteerController::class)->except(['create', 'store']);
+        Route::post('/volunteers/{id}/verify', [VolunteerController::class, 'verify'])->name('volunteers.verify');
+        Route::post('/volunteers/{id}/reject', [VolunteerController::class, 'reject'])->name('volunteers.reject');
+
 
         // Reports
         Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

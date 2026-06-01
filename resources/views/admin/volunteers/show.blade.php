@@ -583,83 +583,226 @@
         </header>
 
         <div class="content">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <h2 style="font-size: 1.25rem; font-weight: 800;">Detail Relawan (Kurir)</h2>
-                <a href="{{ route('admin.volunteers.index') }}" class="btn-cancel-modal"
-                    style="text-decoration: none;">&larr; Kembali</a>
-            </div>
+            <style>
+                .profile-header {
+                    display: grid;
+                    grid-template-columns: 280px 1fr;
+                    gap: 30px;
+                    background: #fff;
+                    border: 1px solid var(--border);
+                    border-radius: 12px;
+                    padding: 30px;
+                    margin-bottom: 24px;
+                }
 
-            <!-- PROFILE CARD -->
-            <div class="table-card"
-                style="padding: 24px; display: grid; grid-template-columns: 1fr 2fr; gap: 24px; align-items: start;">
-                <div style="text-align: center; padding-right: 24px; border-right: 1px solid var(--border);">
-                    <img src="https://ui-avatars.com/api/?name={{ urlencode($volunteer->name) }}&background=10B981&color=fff&size=100"
-                        style="border-radius: 50%; margin-bottom: 16px;">
-                    <h3 style="font-size: 1.2rem; font-weight: 800;">{{ $volunteer->name }}</h3>
-                    <p style="color: var(--muted); font-size: 0.85rem; margin-bottom: 16px;">
-                        {{ '@' . $volunteer->username }}</p>
+                .profile-sidebar {
+                    text-align: center;
+                    border-right: 1px dashed var(--border);
+                    padding-right: 30px;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                }
 
-                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 20px;">
+                .profile-avatar {
+                    width: 110px;
+                    height: 110px;
+                    border-radius: 50%;
+                    border: 4px solid #f0fdf4;
+                    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+                    margin-bottom: 16px;
+                    object-fit: cover;
+                }
+
+                .profile-name {
+                    font-size: 1.3rem;
+                    font-weight: 800;
+                    color: var(--text);
+                    margin-bottom: 4px;
+                    line-height: 1.2;
+                }
+
+                .profile-sub {
+                    font-size: 0.85rem;
+                    color: var(--muted);
+                    font-weight: 600;
+                    margin-bottom: 20px;
+                }
+
+                .profile-actions {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 10px;
+                    margin-top: 24px;
+                    width: 100%;
+                }
+
+                .btn-verify {
+                    background: #16a34a;
+                    color: #fff;
+                    border: none;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: 0.2s;
+                    font-size: 0.85rem;
+                    width: 100%;
+                }
+
+                .btn-verify:hover {
+                    background: #15803d;
+                }
+
+                .btn-reject {
+                    background: #fff;
+                    color: #dc2626;
+                    border: 1px solid #fca5a5;
+                    padding: 12px;
+                    border-radius: 8px;
+                    font-weight: 700;
+                    cursor: pointer;
+                    transition: 0.2s;
+                    font-size: 0.85rem;
+                    width: 100%;
+                }
+
+                .btn-reject:hover {
+                    background: #fef2f2;
+                }
+
+                .btn-back {
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 8px;
+                    color: var(--muted);
+                    text-decoration: none;
+                    font-weight: 700;
+                    font-size: 0.9rem;
+                    transition: 0.2s;
+                    margin-bottom: 20px;
+                }
+
+                .btn-back:hover {
+                    color: var(--text);
+                }
+
+                .info-grid {
+                    display: grid;
+                    grid-template-columns: repeat(2, 1fr);
+                    gap: 20px;
+                    align-content: start;
+                }
+
+                .info-item {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .info-item.full {
+                    grid-column: 1 / -1;
+                }
+
+                .info-label {
+                    font-size: 0.75rem;
+                    font-weight: 700;
+                    color: var(--muted);
+                    text-transform: uppercase;
+                    letter-spacing: 0.5px;
+                }
+
+                .info-value {
+                    font-size: 0.95rem;
+                    font-weight: 600;
+                    color: var(--text);
+                    background: #f8f9fb;
+                    padding: 14px 16px;
+                    border-radius: 8px;
+                    border: 1px solid #edf1f5;
+                }
+            </style>
+
+            <a href="{{ route('admin.volunteers.index') }}" class="btn-back">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="18"
+                    height="18">
+                    <line x1="19" y1="12" x2="5" y2="12"></line>
+                    <polyline points="12 19 5 12 12 5"></polyline>
+                </svg>
+                Kembali ke Daftar Relawan
+            </a>
+
+            <div class="profile-header">
+                <div class="profile-sidebar">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode($volunteer->name) }}&background=10B981&color=fff&size=120"
+                        class="profile-avatar">
+                    <h3 class="profile-name">{{ $volunteer->name }}</h3>
+                    <p class="profile-sub">{{ '@' . $volunteer->username }}</p>
+
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;">
                         @if ($volunteer->is_verified)
                             <span class="badge-active"><span class="badge-dot"></span>Terverifikasi</span>
                         @else
                             <span class="badge-inactive" style="color: #dc2626; background: #fee2e2;"><span
-                                    class="badge-dot"></span>Belum Verifikasi</span>
+                                    class="badge-dot"></span>Pending</span>
                         @endif
 
                         @if ($volunteer->status === 'aktif' || $volunteer->status === 'online')
                             <span class="badge-active" style="background: #e0f2fe; color: #2563eb;"><span
-                                    class="badge-dot"></span>ON</span>
+                                    class="badge-dot"></span>ON / Narik</span>
                         @else
-                            <span class="badge-inactive"><span class="badge-dot"></span>OFF</span>
+                            <span class="badge-inactive"><span class="badge-dot"></span>OFF / Istirahat</span>
                         @endif
                     </div>
 
-                    <!-- Admin Actions -->
-                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                    <div class="profile-actions">
                         @if (!$volunteer->is_verified)
                             <form action="{{ route('admin.volunteers.verify', $volunteer->_id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn-save-modal" style="width: 100%;">Setujui Relawan
-                                    (Verify)</button>
+                                <button type="submit" class="btn-verify">Setujui Relawan</button>
                             </form>
                         @else
                             <form action="{{ route('admin.volunteers.reject', $volunteer->_id) }}" method="POST">
                                 @csrf
-                                <button type="submit" class="btn-cancel-modal"
-                                    style="width: 100%; color: #dc2626; border-color: #fca5a5;">Cabut Verifikasi
-                                    (Reject)</button>
+                                <button type="submit" class="btn-reject">Cabut Verifikasi</button>
                             </form>
                         @endif
                     </div>
                 </div>
 
-                <!-- Right: Detailed Data -->
-                <div class="form-grid">
-                    <div class="form-group"><label>No. HP (WhatsApp)</label>
-                        <p style="font-weight: 600;">{{ $volunteer->phone ?? '-' }}</p>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="info-label">No. Telepon / WA</div>
+                        <div class="info-value">{{ $volunteer->phone ?? '-' }}</div>
                     </div>
-                    <div class="form-group"><label>Total Pengantaran</label>
-                        <p style="font-weight: 600;">
-                            {{ $volunteer->deliveries ? $volunteer->deliveries->count() : 0 }} Tugas</p>
+                    <div class="info-item">
+                        <div class="info-label">Total Pengantaran</div>
+                        <div class="info-value" style="color: #2e7d32;">
+                            {{ $volunteer->deliveries ? $volunteer->deliveries->count() : 0 }} Tugas Selesai</div>
                     </div>
-                    <div class="form-group"><label>Tipe Kendaraan</label>
-                        <p style="font-weight: 600; text-transform: capitalize;">{{ $volunteer->vehicle_type ?? '-' }}
-                        </p>
+                    <div class="info-item">
+                        <div class="info-label">Tipe Kendaraan</div>
+                        <div class="info-value" style="text-transform: uppercase;">
+                            {{ $volunteer->vehicle_type ?? '-' }}</div>
                     </div>
-                    <div class="form-group"><label>Plat Nomor</label>
-                        <p style="color: #2563eb; font-weight: 800;">{{ $volunteer->vehicle_plate ?? '-' }}</p>
+                    <div class="info-item">
+                        <div class="info-label">Plat Nomor</div>
+                        <div class="info-value" style="color: #2563eb; font-weight: 800;">
+                            {{ $volunteer->vehicle_plate ?? '-' }}</div>
                     </div>
-                    <div class="form-group"><label>Latitude (Lokasi Terakhir)</label>
-                        <p style="font-weight: 600;">{{ $volunteer->last_latitude ?? '-' }}</p>
+                    <div class="info-item">
+                        <div class="info-label">Latitude Terakhir</div>
+                        <div class="info-value" style="font-family: monospace;">
+                            {{ $volunteer->last_latitude ?? '-' }}</div>
                     </div>
-                    <div class="form-group"><label>Longitude (Lokasi Terakhir)</label>
-                        <p style="font-weight: 600;">{{ $volunteer->last_longitude ?? '-' }}</p>
+                    <div class="info-item">
+                        <div class="info-label">Longitude Terakhir</div>
+                        <div class="info-value" style="font-family: monospace;">
+                            {{ $volunteer->last_longitude ?? '-' }}</div>
                     </div>
                 </div>
             </div>
 
-            <!-- HISTORY TABLE -->
             <div class="table-card">
                 <div class="table-card-header">
                     <h3>Riwayat Tugas Pengantaran</h3>
@@ -669,17 +812,17 @@
                         <tr>
                             <th>Tugas ID</th>
                             <th>Makanan</th>
-                            <th>Diantar Ke</th>
+                            <th>Tujuan (Penerima)</th>
                             <th>Status</th>
-                            <th>Tanggal</th>
+                            <th>Tanggal Diambil</th>
                         </tr>
                     </thead>
                     <tbody>
                         @forelse($volunteer->deliveries ?? [] as $del)
                             <tr>
-                                <td class="td-muted">#{{ substr($del->_id, -6) }}</td>
-                                <td class="td-name">{{ $del->food->name ?? 'N/A' }}</td>
-                                <td>{{ $del->receiver->foundation_name ?? ($del->receiver->name ?? 'N/A') }}</td>
+                                <td class="td-muted">#{{ strtoupper(substr($del->_id, -6)) }}</td>
+                                <td class="td-name">{{ $del->food->name ?? 'Data Terhapus' }}</td>
+                                <td>{{ $del->receiver->foundation_name ?? ($del->receiver->name ?? '-') }}</td>
                                 <td>
                                     @if ($del->status === 'delivered')
                                         <span class="badge-active"><span class="badge-dot"></span>Selesai</span>
@@ -692,8 +835,8 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="5" style="text-align:center;padding:20px;color:var(--muted);">Belum
-                                    ada riwayat tugas pengantaran.</td>
+                                <td colspan="5" style="text-align:center;padding:30px;color:var(--muted);">Belum
+                                    ada riwayat tugas.</td>
                             </tr>
                         @endforelse
                     </tbody>
