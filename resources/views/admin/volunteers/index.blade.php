@@ -215,7 +215,6 @@
             gap: 20px;
         }
 
-        /* 4 STAT CARDS */
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -226,6 +225,7 @@
             border-radius: 12px;
             padding: 16px 18px;
             color: #fff;
+            position: relative;
             overflow: hidden;
         }
 
@@ -278,7 +278,6 @@
             opacity: .85;
         }
 
-        /* TABLE */
         .table-card {
             background: #fff;
             border-radius: 12px;
@@ -297,32 +296,6 @@
         .table-card-header h3 {
             font-size: 0.95rem;
             font-weight: 700;
-        }
-
-        .btn-add {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            background: #2e7d32;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.84rem;
-            font-weight: 600;
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            cursor: pointer;
-            text-decoration: none;
-            transition: background .15s;
-        }
-
-        .btn-add:hover {
-            background: #1b5e20;
-        }
-
-        .btn-add svg {
-            width: 15px;
-            height: 15px;
         }
 
         table {
@@ -362,6 +335,7 @@
 
         .td-name {
             font-weight: 700;
+            color: var(--text);
         }
 
         .td-muted {
@@ -425,7 +399,6 @@
             height: 13px;
         }
 
-        /* PAGINATION */
         .pagination-wrap {
             display: flex;
             justify-content: center;
@@ -472,118 +445,6 @@
             font-size: 0.82rem;
         }
 
-        /* MODAL */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.45);
-            z-index: 500;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-
-        .modal-overlay.open {
-            display: flex;
-        }
-
-        .modal {
-            background: #fff;
-            border-radius: 14px;
-            padding: 26px;
-            max-width: 500px;
-            width: 100%;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-
-        .modal h3 {
-            font-size: 1rem;
-            font-weight: 800;
-            margin-bottom: 18px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-        }
-
-        .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-
-        .form-group.full {
-            grid-column: 1/-1;
-        }
-
-        .form-group label {
-            font-size: 0.73rem;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: .4px;
-        }
-
-        .form-group input,
-        .form-group select,
-        .form-group textarea {
-            width: 100%;
-            background: #f8f9fb;
-            border: 1.5px solid var(--border);
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-family: inherit;
-            font-size: 0.87rem;
-            color: var(--text);
-            outline: none;
-            transition: border-color .15s;
-        }
-
-        .form-group input:focus,
-        .form-group select:focus {
-            border-color: #2e7d32;
-            background: #fff;
-        }
-
-        .modal-footer {
-            display: flex;
-            gap: 10px;
-            justify-content: flex-end;
-            margin-top: 18px;
-            padding-top: 14px;
-            border-top: 1px solid var(--border);
-        }
-
-        .btn-cancel-modal {
-            padding: 9px 20px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: #fff;
-            font-family: inherit;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-        }
-
-        .btn-save-modal {
-            padding: 9px 20px;
-            border-radius: 8px;
-            border: none;
-            background: #2e7d32;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.85rem;
-            font-weight: 700;
-            cursor: pointer;
-        }
-
         .alert {
             padding: 12px 16px;
             border-radius: 8px;
@@ -606,7 +467,6 @@
         }
     </style>
     <script>
-        // Apply appearance & font dari localStorage sebelum render (cegah flash)
         (function() {
             var app = localStorage.getItem('refood_appearance') || 'light';
             var font = localStorage.getItem('refood_font') || 'medium';
@@ -614,37 +474,6 @@
             if (app === 'dark') html.classList.add('dark');
             html.classList.add('font-' + font);
         })();
-    </script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('crudTable', () => ({
-                isModalOpen: false,
-                isEditModalOpen: false,
-                isDeleteModalOpen: false,
-                editForm: {},
-                deleteForm: {
-                    id: '',
-                    name: ''
-                },
-
-                openEditModal(data) {
-                    this.editForm = {
-                        ...data
-                    };
-                    this.editForm.id = data._id; // Penting untuk MongoDB
-                    this.isEditModalOpen = true;
-                },
-
-                openDeleteModal(id, name) {
-                    this.deleteForm = {
-                        id: id,
-                        name: name
-                    };
-                    this.isDeleteModalOpen = true;
-                }
-            }));
-        });
     </script>
 </head>
 
@@ -744,7 +573,7 @@
             </div>
         </header>
 
-        <div class="content" x-data="crudTable()">
+        <div class="content">
             @if (session('success'))
                 <div class="alert alert-success">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -754,7 +583,6 @@
                 </div>
             @endif
 
-            <!-- 4 STAT CARDS -->
             <div class="stats-grid">
                 <div class="stat-card orange">
                     <div class="stat-label"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -796,98 +624,9 @@
                 </div>
             </div>
 
-            <div x-show="isModalOpen" class="modal-overlay" style="display: none;"
-                :style="isModalOpen ? 'display: flex;' : ''">
-                <div class="modal" @click.away="isModalOpen = false">
-                    <h3>Tambah Relawan (Kurir)</h3>
-                    <form action="{{ route('admin.volunteers.store') }}" method="POST">
-                        @csrf
-                        <div class="form-grid">
-                            <div class="form-group"><label>Nama Relawan</label><input type="text" name="name"
-                                    required></div>
-                            <div class="form-group"><label>No. HP (WhatsApp)</label><input type="text"
-                                    name="phone"></div>
-                            <div class="form-group"><label>Tipe Kendaraan</label><input type="text"
-                                    name="vehicle_type" placeholder="Misal: Motor Matic"></div>
-                            <div class="form-group"><label>Plat Nomor</label><input type="text"
-                                    name="vehicle_plate" placeholder="B 1234 ABC"></div>
-                            <div class="form-group full"><label>Email Address</label><input type="email"
-                                    name="email"></div>
-                            <div class="form-group full"><label>Alamat Domisili</label>
-                                <textarea name="address"></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" @click="isModalOpen = false"
-                                class="btn-cancel-modal">Batal</button>
-                            <button type="submit" class="btn-save-modal">Simpan Data</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div x-show="isEditModalOpen" class="modal-overlay" style="display: none;"
-                :style="isEditModalOpen ? 'display: flex;' : ''">
-                <div class="modal" @click.away="isEditModalOpen = false">
-                    <h3>Edit Data Relawan</h3>
-                    <form :action="'{{ url('admin/volunteers') }}/' + editForm.id" method="POST">
-                        @csrf
-                        @method('PUT')
-                        <div class="form-grid">
-                            <div class="form-group"><label>Nama Relawan</label><input type="text" name="name"
-                                    x-model="editForm.name" required></div>
-                            <div class="form-group"><label>No. HP (WA)</label><input type="text" name="phone"
-                                    x-model="editForm.phone"></div>
-                            <div class="form-group"><label>Tipe Kendaraan</label><input type="text"
-                                    name="vehicle_type" x-model="editForm.vehicle_type"></div>
-                            <div class="form-group"><label>Plat Nomor</label><input type="text"
-                                    name="vehicle_plate" x-model="editForm.vehicle_plate"></div>
-                            <div class="form-group full"><label>Email Address</label><input type="email"
-                                    name="email" x-model="editForm.email"></div>
-                            <div class="form-group full"><label>Alamat</label>
-                                <textarea name="address" x-model="editForm.address"></textarea>
-                            </div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" @click="isEditModalOpen = false"
-                                class="btn-cancel-modal">Batal</button>
-                            <button type="submit" class="btn-save-modal">Update Data</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-
-            <div x-show="isDeleteModalOpen" class="modal-overlay" style="display: none;"
-                :style="isDeleteModalOpen ? 'display: flex;' : ''">
-                <div class="modal" @click.away="isDeleteModalOpen = false">
-                    <h3 style="color: #dc2626;">Konfirmasi Hapus</h3>
-                    <p style="font-size: 0.9rem; margin-bottom: 20px;">Hapus relawan <strong
-                            x-text="deleteForm.name"></strong> secara permanen?</p>
-                    <div class="modal-footer">
-                        <button type="button" @click="isDeleteModalOpen = false"
-                            class="btn-cancel-modal">Batal</button>
-                        <form :action="'{{ url('admin/volunteers') }}/' + deleteForm.id" method="POST"
-                            style="margin:0;">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn-save-modal" style="background: #dc2626;">Ya,
-                                Hapus!</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-
             <div class="table-card">
-                <div class="table-card-header"
-                    style="display: flex; justify-content: space-between; align-items: center;">
+                <div class="table-card-header">
                     <h3>Volunteers List</h3>
-                    <button type="button" @click="isModalOpen = true" class="btn-add">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <line x1="12" y1="5" x2="12" y2="19"></line>
-                            <line x1="5" y1="12" x2="19" y2="12"></line>
-                        </svg>
-                        Tambah Data
-                    </button>
                 </div>
                 <table>
                     <thead>
@@ -905,12 +644,10 @@
                                 <td class="td-name">{{ $vol->name }}</td>
                                 <td>{{ $vol->deliveries ? $vol->deliveries->count() : 0 }}</td>
                                 <td class="td-muted">
-                                    {{ $vol->deliveries->last()?->created_at?->format('d M Y') ?? '-' }}
-                                </td>
+                                    {{ $vol->deliveries->last()?->created_at?->format('d M Y') ?? '-' }}</td>
                                 <td>
                                     <div
                                         style="display: flex; flex-direction: column; gap: 6px; align-items: flex-start;">
-                                        <!-- Status Approval Admin -->
                                         @if ($vol->is_verified)
                                             <span class="badge-active"><span class="badge-dot"></span>Active</span>
                                         @else
@@ -919,7 +656,6 @@
                                                     class="badge-dot"></span>Pending</span>
                                         @endif
 
-                                        <!-- Status Login App / DND Mode (ON/OFF) -->
                                         @if ($vol->status === 'aktif' || $vol->status === 'online')
                                             <span class="badge-active"
                                                 style="background: #e0f2fe; color: #2563eb;"><span
@@ -929,7 +665,7 @@
                                         @endif
                                     </div>
                                 </td>
-                                <td style="display: flex; gap: 8px;">
+                                <td>
                                     <a href="{{ route('admin.volunteers.show', $vol->_id) }}" class="btn-view"
                                         title="Detail">
                                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -937,30 +673,8 @@
                                             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                                             <circle cx="12" cy="12" r="3" />
                                         </svg>
+                                        View
                                     </a>
-                                    <button type="button" @click='openEditModal(@json($vol))'
-                                        class="btn-view"
-                                        style="color: #ea580c; border-color: #fdba74; background: #fff7ed;"
-                                        title="Edit">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2">
-                                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                                        </svg>
-                                    </button>
-                                    <button type="button"
-                                        @click="openDeleteModal('{{ $vol->_id }}', '{{ addslashes($vol->name) }}')"
-                                        class="btn-view"
-                                        style="color: #dc2626; border-color: #fca5a5; background: #fef2f2;"
-                                        title="Hapus">
-                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2">
-                                            <polyline points="3 6 5 6 21 6"></polyline>
-                                            <path
-                                                d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
-                                            </path>
-                                        </svg>
-                                    </button>
                                 </td>
                             </tr>
                         @empty
@@ -1012,7 +726,6 @@
         </div>
     </div>
 
-
     <script>
         function toggleDropdown() {
             document.getElementById('adminDropdown').classList.toggle('open');
@@ -1021,47 +734,6 @@
             const btn = document.getElementById('adminBtn'),
                 dd = document.getElementById('adminDropdown');
             if (btn && dd && !btn.contains(e.target) && !dd.contains(e.target)) dd.classList.remove('open');
-        });
-    </script>
-
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script>
-        document.addEventListener('alpine:init', () => {
-            Alpine.data('crudTable', () => ({
-                isModalOpen: false,
-                isEditModalOpen: false,
-                isDeleteModalOpen: false,
-                editForm: {},
-                deleteForm: {
-                    id: '',
-                    name: ''
-                },
-
-                openEditModal(data) {
-                    this.editForm = {
-                        ...data
-                    };
-                    this.editForm.id = data._id; // Penting untuk action form MongoDB
-                    this.isEditModalOpen = true;
-
-                    // Trigger peta jika ada (Guard aman)
-                    setTimeout(() => {
-                        if (typeof initLeafletEditMap === 'function') {
-                            let lat = data.latitude || data.last_latitude || -6.200000;
-                            let lng = data.longitude || data.last_longitude || 106.816666;
-                            initLeafletEditMap(lat, lng);
-                        }
-                    }, 250);
-                },
-
-                openDeleteModal(id, name) {
-                    this.deleteForm = {
-                        id: id,
-                        name: name
-                    };
-                    this.isDeleteModalOpen = true;
-                }
-            }));
         });
     </script>
 </body>
