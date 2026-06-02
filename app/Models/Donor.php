@@ -2,27 +2,37 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable; // Penting untuk Auth
+use Laravel\Sanctum\HasApiTokens;
 
-class Donor extends Model
+class Donor extends Authenticatable
 {
+    use HasApiTokens, Notifiable;
+
     protected $connection = 'mongodb';
-    
-    use HasFactory;
+    protected $collection = 'donors';
+    protected $primaryKey = '_id';
 
     protected $fillable = [
-        'name', 'type', 'pic_name',
-        'phone', 'email', 'address',
+        'name',
+        'email',
+        'phone',
+        'address',
+        'type',
+        'restaurant_name',
+        'password',
+        'is_verified',
+        'status'
     ];
 
-    public function foods()
-    {
-        return $this->hasMany(Food::class);
-    }
+    protected $hidden = [
+        'password', // Agar password tidak terekspos di API
+    ];
 
-    public function deliveries()
-    {
-        return $this->hasMany(Delivery::class);
-    }
+    // Casts untuk memastikan tipe data benar
+    protected $casts = [
+        'is_verified' => 'boolean',
+    ];
 }
