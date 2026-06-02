@@ -4,8 +4,9 @@ namespace App\Models;
 
 use MongoDB\Laravel\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Foundation\Auth\User as Authenticatable; // Penting untuk Auth
+use MongoDB\Laravel\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
+use App\Models\Food;
 
 class Donor extends Authenticatable
 {
@@ -35,4 +36,10 @@ class Donor extends Authenticatable
     protected $casts = [
         'is_verified' => 'boolean',
     ];
+
+    public function foods()
+    {
+        // Karena di dokumen desain database Anda donor_id adalah FK di collection foods
+        return $this->hasMany(Food::class, 'donor_id', '_id');
+    }
 }
