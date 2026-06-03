@@ -42,18 +42,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/settings', [DonorController::class, 'updateSettings']);
 
         Route::get('/foods/{id}', [DonorController::class, 'getDonation']);
-        Route::post('/foods/{id}', [DonorController::class, 'updateDonation']); // Pakai POST agar support gambar
+        Route::post('/foods/{id}', [DonorController::class, 'updateDonation']);
         Route::delete('/foods/{id}', [DonorController::class, 'deleteDonation']);
     });
 
-    // ==========================================
-    // TAMBAHAN: Group Route untuk Penerima
-    // ==========================================
+    // Group Route untuk Penerima
     Route::prefix('receiver')->group(function () {
-        // Nanti sesuaikan dengan Controller yang akan Anda buat untuk Penerima
         Route::get('/dashboard', [ReceiverController::class, 'dashboard']);
 
+        // Fitur Cari & Request Makanan
+        Route::get('/foods/available', [ReceiverController::class, 'getAvailableFoods']);
+        Route::post('/foods/request', [ReceiverController::class, 'createRequest']);
+
+        // Profile
         Route::get('/profile', [ReceiverController::class, 'getProfile']);
-        Route::put('/profile', [ReceiverController::class, 'updateProfile']);
+
+        // Detail & Aksi untuk Makanan yang di-Request
+        Route::get('/foods/{id}', [ReceiverController::class, 'getFoodDetail']);
+        Route::post('/foods/{id}/accept', [ReceiverController::class, 'acceptDonation']);
+        Route::post('/foods/request/{id}', [ReceiverController::class, 'updateRequest']);
+        Route::delete('/foods/request/{id}', [ReceiverController::class, 'deleteRequest']);
     });
 });
