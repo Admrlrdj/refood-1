@@ -1,40 +1,29 @@
 <?php
-// app/Models/Food.php
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
 use MongoDB\Laravel\Eloquent\Model;
 
 class Food extends Model
 {
     protected $connection = 'mongodb';
-    
-    use HasFactory;
-    protected $table = 'foods';
+    protected $collection = 'foods';
+
+    // Sesuaikan fillable dengan field yang kamu minta
     protected $fillable = [
-        'name', 'category', 'portion',
-        'donor_id', 'receiver_id',
-        'status', 'collection_date',
-        'photo', 'note',
+        'name',
+        'category',
+        'portion',
+        'donor_id',
+        'receiver_id',
+        'status',
+        'collection_date',
+        'note',
+        'photo_url'
     ];
 
+    // Pastikan collection_date tersimpan sebagai format Date di MongoDB (bukan string biasa)
     protected $casts = [
         'collection_date' => 'datetime',
     ];
-
-    public function donor()
-    {
-        return $this->belongsTo(Donor::class);
-    }
-
-    public function receiver()
-    {
-        return $this->belongsTo(Receiver::class);
-    }
-
-    public function deliveries()
-    {
-        return $this->hasMany(Delivery::class);
-    }
 }
