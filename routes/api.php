@@ -54,8 +54,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/foods/available', [ReceiverController::class, 'getAvailableFoods']);
         Route::post('/foods/request', [ReceiverController::class, 'createRequest']);
 
-        // Profile
+        // Riwayat (HISTORY)
+        Route::get('/history', [ReceiverController::class, 'history']);
+
+        // Profile & Settings
         Route::get('/profile', [ReceiverController::class, 'getProfile']);
+        Route::put('/profile', [ReceiverController::class, 'updateProfile']);
+        Route::put('/settings', [ReceiverController::class, 'updateSettings']);
 
         // Detail & Aksi untuk Makanan yang di-Request
         Route::get('/foods/{id}', [ReceiverController::class, 'getFoodDetail']);

@@ -203,8 +203,12 @@ class DonorController extends Controller
     // ==========================================
     public function getDonation(Request $request, $id)
     {
-        $food = Food::where('_id', $id)->where('donor_id', $request->user()->_id)->first();
-        if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        $food = \App\Models\Food::find($id);
+
+        // Membandingkan ID dengan aman (dijadikan string agar terhindar dari error ObjectId MongoDB)
+        if (!$food || (string) $food->donor_id !== (string) $request->user()->_id) {
+            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        }
 
         return response()->json(['status' => 'success', 'data' => $food], 200);
     }
@@ -214,10 +218,13 @@ class DonorController extends Controller
     // ==========================================
     public function updateDonation(Request $request, $id)
     {
-        $food = Food::where('_id', $id)->where('donor_id', $request->user()->_id)->first();
-        if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        $food = \App\Models\Food::find($id);
 
-        $validator = Validator::make($request->all(), [
+        if (!$food || (string) $food->donor_id !== (string) $request->user()->_id) {
+            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        }
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'name' => 'sometimes|required|string|max:255',
             'category' => 'sometimes|required|string|max:255',
             'portion' => 'sometimes|required',
@@ -232,7 +239,7 @@ class DonorController extends Controller
         // Ganti foto lama jika ada upload baru
         if ($request->hasFile('photo')) {
             if ($food->photo_url) {
-                Storage::delete(str_replace('storage/', 'public/', $food->photo_url));
+                \Illuminate\Support\Facades\Storage::delete(str_replace('storage/', 'public/', $food->photo_url));
             }
             $path = $request->file('photo')->store('public/foods');
             $food->photo_url = str_replace('public/', 'storage/', $path);
@@ -254,12 +261,15 @@ class DonorController extends Controller
     // ==========================================
     public function deleteDonation(Request $request, $id)
     {
-        $food = Food::where('_id', $id)->where('donor_id', $request->user()->_id)->first();
-        if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        $food = \App\Models\Food::find($id);
+
+        if (!$food || (string) $food->donor_id !== (string) $request->user()->_id) {
+            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+        }
 
         // Hapus file gambar dari server
         if ($food->photo_url) {
-            Storage::delete(str_replace('storage/', 'public/', $food->photo_url));
+            \Illuminate\Support\Facades\Storage::delete(str_replace('storage/', 'public/', $food->photo_url));
         }
 
         $food->delete();
