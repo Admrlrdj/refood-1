@@ -38,6 +38,12 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/profile', [DonorController::class, 'getProfile']);
         Route::put('/profile', [DonorController::class, 'updateProfile']);
+
+        Route::put('/settings', [DonorController::class, 'updateSettings']);
+
+        Route::get('/foods/{id}', [DonorController::class, 'getDonation']);
+        Route::post('/foods/{id}', [DonorController::class, 'updateDonation']); // Pakai POST agar support gambar
+        Route::delete('/foods/{id}', [DonorController::class, 'deleteDonation']);
     });
 
     // ==========================================
@@ -46,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('receiver')->group(function () {
         // Nanti sesuaikan dengan Controller yang akan Anda buat untuk Penerima
         Route::get('/dashboard', [ReceiverController::class, 'dashboard']);
-        
+
         Route::get('/profile', [ReceiverController::class, 'getProfile']);
         Route::put('/profile', [ReceiverController::class, 'updateProfile']);
     });

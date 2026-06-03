@@ -148,4 +148,122 @@ class DonorController extends Controller
             'data' => $donor
         ], 200);
     }
+
+    // ==========================================
+    // 5. UPDATE SETTINGS (USERNAME & PASSWORD)
+    // ==========================================
+    public function updateSettings(Request $request)
+    {
+        $donor = $request->user();
+
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'username' => 'sometimes|string|max:50',
+            'old_password' => 'required_with:new_password|string',
+            'new_password' => 'nullable|string|min:6',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        }
+
+        // 1. Cek & Update Username
+        if ($request->has('username') && $request->username !== $donor->username) {
+            $newUsername = strtolower(str_replace(' ', '', $request->username));
+
+            // Pengecekan manual apakah username sudah dipakai orang lain
+            $exists = \App\Models\Donor::where('username', $newUsername)
+                ->where('_id', '!=', $donor->_id)
+                ->exists();
+            if ($exists) {
+                return response()->json(['status' => 'error', 'message' => 'Username sudah digunakan pengguna lain.'], 422);
+            }
+            $donor->username = $newUsername;
+        }
+
+        // 2. Cek & Update Password
+        if ($request->has('new_password') && !empty($request->new_password)) {
+            // Pastikan password lama yang dimasukkan benar
+            if (!\Illuminate\Support\Facades\Hash::check($request->old_password, $donor->password)) {
+                return response()->json(['status' => 'error', 'message' => 'Password lama salah!'], 400);
+            }
+            $donor->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
+        }
+
+        $donor->save();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Pengaturan akun berhasil diperbarui!',
+            'data' => $donor
+        ], 200);
+    }
+
+    // ==========================================
+    // 6. GET DETAIL DONASI
+    // ==========================================
+    public function getDonation(Request $request, $id)
+    {
+        $food = Food::where('_id', $id)->where('donor_id', $request->user()->_id)->first();
+        if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+
+        return response()->json(['status' => 'success', 'data' => $food], 200);
+    }
+
+    // ==========================================
+    // 7. UPDATE DONASI (EDIT)
+    // ==========================================
+    public function updateDonation(Request $request, $id)
+    {
+        $food = Food::where('_id', $id)->where('donor_id', $request->user()->_id)->first();
+        if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+
+        $validator = Validator::make($request->all(), [
+            'name' => 'sometimes|required|string|max:255',
+            'category' => 'sometimes|required|string|max:255',
+            'portion' => 'sometimes|required',
+            'collection_date' => 'sometimes|required|date',
+            'photo' => 'nullable|image|mimes:jpg,jpeg,png|max:5120',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+        }
+
+        // Ganti foto lama jika ada upload baru
+        if ($request->hasFile('photo')) {
+            if ($food->photo_url) {
+                Storage::delete(str_replace('storage/', 'public/', $food->photo_url));
+            }
+            $path = $request->file('photo')->store('public/foods');
+            $food->photo_url = str_replace('public/', 'storage/', $path);
+        }
+
+        if ($request->has('name')) $food->name = $request->name;
+        if ($request->has('category')) $food->category = $request->category;
+        if ($request->has('portion')) $food->portion = (string) $request->portion;
+        if ($request->has('collection_date')) $food->collection_date = \Carbon\Carbon::parse($request->collection_date);
+        if ($request->has('note')) $food->note = $request->note;
+
+        $food->save();
+
+        return response()->json(['status' => 'success', 'message' => 'Donasi berhasil diperbarui', 'data' => $food], 200);
+    }
+
+    // ==========================================
+    // 8. DELETE DONASI
+    // ==========================================
+    public function deleteDonation(Request $request, $id)
+    {
+        $food = Food::where('_id', $id)->where('donor_id', $request->user()->_id)->first();
+        if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan'], 404);
+
+        // Hapus file gambar dari server
+        if ($food->photo_url) {
+            Storage::delete(str_replace('storage/', 'public/', $food->photo_url));
+        }
+
+        $food->delete();
+
+        return response()->json(['status' => 'success', 'message' => 'Donasi berhasil dihapus'], 200);
+    }
 }

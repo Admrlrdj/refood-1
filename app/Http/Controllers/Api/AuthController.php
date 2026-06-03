@@ -130,19 +130,21 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         $request->validate([
-            'username' => 'required|string', // Ubah dari email ke username
+            'username' => 'required|string',
             'password' => 'required',
             'role' => 'required|in:donor,receiver,volunteer'
         ]);
 
         $user = null;
-        $usernameInput = strtolower(str_replace(' ', '', $request->username)); // Bersihkan input
 
         if ($request->role === 'donor') {
+            $usernameInput = strtolower(str_replace(' ', '', $request->username));
             $user = Donor::where('username', $usernameInput)->first();
         } elseif ($request->role === 'receiver') {
-            $user = Receiver::where('username', $usernameInput)->first();
+            // Perbaikan: Receiver dicari sesuai input aslinya (tidak di-lowercase)
+            $user = Receiver::where('username', $request->username)->first();
         } elseif ($request->role === 'volunteer') {
+            $usernameInput = strtolower(str_replace(' ', '', $request->username));
             $user = Volunteer::where('username', $usernameInput)->first();
         }
 
@@ -150,7 +152,10 @@ class AuthController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Username atau Password salah.'], 401);
         }
 
-        if (!$user->is_verified) {
+        // PERBAIKAN PENTING: Cek is_verified hanya jika kolomnya ada
+        // (Di tabel Receiver saat ini belum ada is_verified, jadi kita anggap default true)
+        $isVerified = $user->is_verified ?? true;
+        if (!$isVerified) {
             return response()->json(['status' => 'error', 'message' => 'Akun Anda sedang ditinjau oleh Admin.'], 403);
         }
 
