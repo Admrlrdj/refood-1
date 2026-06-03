@@ -4,8 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\DonorController;
-// Tambahkan Controller untuk Penerima nanti
-use App\Http\Controllers\Api\ReceiverController; 
+use App\Http\Controllers\Api\ReceiverController;
+use App\Http\Controllers\Api\VolunteerController;
 
 /*
 |--------------------------------------------------------------------------
@@ -67,5 +67,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/foods/{id}/accept', [ReceiverController::class, 'acceptDonation']);
         Route::post('/foods/request/{id}', [ReceiverController::class, 'updateRequest']);
         Route::delete('/foods/request/{id}', [ReceiverController::class, 'deleteRequest']);
+    });
+
+    // Group Route untuk Relawan
+    Route::prefix('volunteer')->group(function () {
+        Route::get('/dashboard', [VolunteerController::class, 'dashboard']);
+        Route::get('/profile', [VolunteerController::class, 'getProfile']);
     });
 });
