@@ -9,7 +9,6 @@ class Food extends Model
     protected $connection = 'mongodb';
     protected $collection = 'foods';
 
-    // Sesuaikan fillable dengan field yang kamu minta
     protected $fillable = [
         'name',
         'category',
@@ -22,8 +21,23 @@ class Food extends Model
         'photo_url'
     ];
 
-    // Pastikan collection_date tersimpan sebagai format Date di MongoDB (bukan string biasa)
     protected $casts = [
         'collection_date' => 'datetime',
     ];
+
+    /**
+     * Relasi ke model Donor
+     */
+    public function donor()
+    {
+        return $this->belongsTo(Donor::class, 'donor_id');
+    }
+
+    /**
+     * Relasi ke model Receiver
+     */
+    public function receiver()
+    {
+        return $this->belongsTo(Receiver::class, 'receiver_id');
+    }
 }

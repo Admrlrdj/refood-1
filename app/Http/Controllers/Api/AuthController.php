@@ -47,37 +47,51 @@ class AuthController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Registrasi Donatur berhasil!'], 201);
     }
 
+    // Register Penerima
     public function registerReceiver(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:receivers',
-            'pic_name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:receivers',
-            'phone' => 'required|string',
-            'password' => 'required|string|min:6',
+            'name'            => 'required|string|max:255',
+            'username'        => 'required|string|max:255|unique:receivers,username',
+            'type'            => 'required|string', // misal: Panti Asuhan, Komunitas
+            'pic_name'        => 'required|string|max:255',
+            'phone'           => 'required|string',
+            'email'           => 'required|string|email|max:255|unique:receivers,email',
+            'address'         => 'required|string',
+            'capacity_people' => 'required|integer|min:1',
+            'need_level'      => 'required|string', // misal: Tinggi, Sedang, Rendah
+            'password'        => 'required|string|min:6|confirmed',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
+            return response()->json([
+                'status' => 'error',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         $receiver = Receiver::create([
-            'name' => $request->name,
-            'username' => strtolower(str_replace(' ', '', $request->username)),
-            'pic_name' => $request->pic_name,
-            'email' => $request->email,
-            'phone' => $request->phone,
-            'capacity_people' => $request->capacity_people ?? 0,
-            'need_level' => $request->need_level ?? 0,
-            'address' => $request->address ?? '',
-            'password' => Hash::make($request->password),
-            'type' => 'foundation',
-            'is_verified' => false,
-            'status' => 'offline',
+            'name'            => $request->name,
+            'username'        => $request->username,
+            'type'            => $request->type,
+            'pic_name'        => $request->pic_name,
+            'phone'           => $request->phone,
+            'email'           => $request->email,
+            'address'         => $request->address,
+            'capacity_people' => $request->capacity_people,
+            'need_level'      => $request->need_level,
+            'password'        => Hash::make($request->password),
         ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Registrasi Penerima berhasil!'], 201);
+        $token = $receiver->createToken('auth_token')->plainTextToken;
+
+        return response()->json([
+            'status'       => 'success',
+            'message'      => 'Registrasi Penerima Berhasil',
+            'access_token' => $token,
+            'token_type'   => 'Bearer',
+            'data'         => $receiver
+        ], 201);
     }
 
     public function registerVolunteer(Request $request)
