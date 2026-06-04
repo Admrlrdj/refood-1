@@ -46,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/foods/{id}', [DonorController::class, 'getDonation']);
         Route::post('/foods/{id}', [DonorController::class, 'updateDonation']);
         Route::post('/foods/{id}/cancel', [DonorController::class, 'cancelDonation']);
+        Route::post('/foods/request/{id}/fulfill', [DonorController::class, 'fulfillRequest']);
         Route::delete('/foods/{id}', [DonorController::class, 'deleteDonation']);
     });
 
