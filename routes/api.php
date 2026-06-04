@@ -34,6 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('donor')->group(function () {
         Route::get('/dashboard', [DonorController::class, 'dashboard']);
         Route::post('/foods', [DonorController::class, 'createDonation']);
+        Route::post('/foods/{id}', [DonorController::class, 'updateDonation']);
+
+        // Riwayat (HISTORY)
         Route::get('/history', [DonorController::class, 'history']);
 
         Route::get('/profile', [DonorController::class, 'getProfile']);

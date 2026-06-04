@@ -15,21 +15,19 @@ class DonorController extends Controller
     {
         $donorId = (string) $request->user()->_id;
 
-        // FIX MONGODB: Gunakan whereIn dengan status eksplisit agar data PASTI terbaca
-        $activeDonationsList = \App\Models\Food::where('donor_id', $donorId)
+        $activeDonationsList = Food::where('donor_id', $donorId)
             ->whereIn('status', ['available', 'pending', 'accepted', 'on_delivery'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // FIX MONGODB: Cari secara eksplisit status 'waiting_donor' atau 'requested'
-        $yayasanRequests = \App\Models\Food::with('receiver')
+        $yayasanRequests = Food::with('receiver')
             ->whereIn('status', ['waiting_donor', 'requested'])
             ->orderBy('created_at', 'desc')
             ->take(15)
             ->get();
 
         $activeDonationsCount = $activeDonationsList->count();
-        $completedDonationsCount = \App\Models\Food::where('donor_id', $donorId)
+        $completedDonationsCount = Food::where('donor_id', $donorId)
             ->where('status', 'completed')
             ->count();
 
@@ -51,10 +49,15 @@ class DonorController extends Controller
     // ==========================================
     public function getDonation(Request $request, $id)
     {
-        $food = Food::where('_id', $id)->first();
+        // Cukup gunakan find(), Laravel otomatis menanganinya karena ID dari Flutter sudah bersih
+        $food = Food::find($id);
 
-        if (!$food || (string) $food->donor_id !== (string) $request->user()->_id) {
-            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan.'], 404);
+        if (!$food) {
+            return response()->json(['status' => 'error', 'message' => 'Data donasi tidak ditemukan di database.'], 404);
+        }
+
+        if ((string) $food->donor_id !== (string) $request->user()->_id) {
+            return response()->json(['status' => 'error', 'message' => 'Anda tidak memiliki akses ke donasi ini.'], 403);
         }
 
         return response()->json(['status' => 'success', 'data' => $food], 200);
@@ -65,10 +68,10 @@ class DonorController extends Controller
     // ==========================================
     public function fulfillRequest(Request $request, $id)
     {
-        $food = Food::where('_id', $id)->first();
+        $food = Food::find($id);
 
-        if (!$food || $food->status !== 'waiting_donor') {
-            return response()->json(['status' => 'error', 'message' => 'Permintaan ini sudah dipenuhi donatur lain.'], 400);
+        if (!$food || !in_array($food->status, ['waiting_donor', 'requested'])) {
+            return response()->json(['status' => 'error', 'message' => 'Permintaan ini sudah dipenuhi donatur lain atau tidak tersedia.'], 400);
         }
 
         $food->donor_id = (string) $request->user()->_id;
@@ -85,7 +88,7 @@ class DonorController extends Controller
     {
         $request->validate([
             'name' => 'required|string|max:255',
-            'portion' => 'required', // Menyesuaikan input string/integer dari frontend
+            'portion' => 'required',
         ]);
 
         $food = Food::create([
@@ -96,22 +99,57 @@ class DonorController extends Controller
             'note' => $request->note ?? '',
             'photo_url' => $request->photo_url ?? null,
             'collection_date' => $request->collection_date ?? null,
-            'status' => 'available', // Status awal donasi baru
+            'status' => 'available',
         ]);
 
         return response()->json(['status' => 'success', 'message' => 'Donasi berhasil dibuat', 'data' => $food], 201);
     }
 
+    // ==========================================
+    // 5. UPDATE / EDIT DONASI
+    // ==========================================
     public function updateDonation(Request $request, $id)
-    { /* opsional */
+    {
+        $food = Food::find($id);
+
+        if (!$food || (string) $food->donor_id !== (string) $request->user()->_id) {
+            return response()->json(['status' => 'error', 'message' => 'Data donasi tidak ditemukan atau Anda tidak memiliki akses.'], 404);
+        }
+
+        if (!in_array($food->status, ['available', 'pending', 'waiting_donor'])) {
+            return response()->json(['status' => 'error', 'message' => 'Donasi sudah diproses sehingga tidak bisa diubah lagi.'], 400);
+        }
+
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'portion' => 'required',
+        ]);
+
+        $food->name = $request->name;
+        $food->category = $request->category ?? $food->category;
+        $food->portion = (string) $request->portion;
+        $food->note = $request->note ?? $food->note;
+
+        if ($request->has('collection_date')) {
+            $food->collection_date = $request->collection_date;
+        }
+
+        if ($request->has('photo_url') && $request->photo_url != null) {
+            $food->photo_url = $request->photo_url;
+        }
+
+        $food->save();
+
+        return response()->json(['status' => 'success', 'message' => 'Data donasi berhasil diperbarui!', 'data' => $food], 200);
     }
 
     // ==========================================
-    // 5. BATALKAN/HAPUS DONASI
+    // 6. BATALKAN/HAPUS DONASI
     // ==========================================
     public function deleteDonation(Request $request, $id)
     {
-        $food = Food::where('_id', $id)->first();
+        $food = Food::find($id);
+
         if ($food && (string) $food->donor_id === (string) $request->user()->_id) {
             $food->delete();
             return response()->json(['status' => 'success', 'message' => 'Donasi dibatalkan.']);
@@ -120,7 +158,7 @@ class DonorController extends Controller
     }
 
     // ==========================================
-    // 6. HISTORY, PROFILE & SETTINGS
+    // 7. HISTORY, PROFILE & SETTINGS
     // ==========================================
     public function history(Request $request)
     {
