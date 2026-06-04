@@ -10,9 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 class DonorController extends Controller
 {
-    // ==========================================
     // 1. GET DASHBOARD STATS & RECENT ACTIVITY
-    // ==========================================
     public function dashboard(Request $request)
     {
         $donorId = $request->user()->_id;
@@ -45,9 +43,7 @@ class DonorController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 2. CREATE DONASI MAKANAN (POST)
-    // ==========================================
     public function createDonation(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -89,9 +85,7 @@ class DonorController extends Controller
         ], 201);
     }
 
-    // ==========================================
     // 3. GET RIWAYAT DONASI
-    // ==========================================
     public function history(Request $request)
     {
         $donorId = $request->user()->_id;
@@ -107,9 +101,7 @@ class DonorController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 4. CRUD PROFILE (VIEW & UPDATE)
-    // ==========================================
     public function getProfile(Request $request)
     {
         // Mengembalikan data user yang sedang login
@@ -149,9 +141,7 @@ class DonorController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 5. UPDATE SETTINGS (USERNAME & PASSWORD)
-    // ==========================================
     public function updateSettings(Request $request)
     {
         $donor = $request->user();
@@ -198,9 +188,7 @@ class DonorController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 6. GET DETAIL DONASI
-    // ==========================================
     public function getDonation(Request $request, $id)
     {
         $food = \App\Models\Food::find($id);
@@ -213,9 +201,7 @@ class DonorController extends Controller
         return response()->json(['status' => 'success', 'data' => $food], 200);
     }
 
-    // ==========================================
     // 7. UPDATE DONASI (EDIT)
-    // ==========================================
     public function updateDonation(Request $request, $id)
     {
         $food = \App\Models\Food::find($id);
@@ -256,9 +242,7 @@ class DonorController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Donasi berhasil diperbarui', 'data' => $food], 200);
     }
 
-    // ==========================================
     // 8. DELETE DONASI
-    // ==========================================
     public function deleteDonation(Request $request, $id)
     {
         $food = \App\Models\Food::find($id);

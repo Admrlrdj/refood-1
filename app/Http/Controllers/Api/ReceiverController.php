@@ -9,9 +9,7 @@ use Illuminate\Support\Facades\Validator;
 
 class ReceiverController extends Controller
 {
-    // ==========================================
     // 1. GET DASHBOARD STATS & RECENT ACTIVITY
-    // ==========================================
     public function dashboard(Request $request)
     {
         $receiverId = $request->user()->_id;
@@ -49,9 +47,7 @@ class ReceiverController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 2. CARI MAKANAN (BROWSE DONASI TERSEDIA)
-    // ==========================================
     public function getAvailableFoods(Request $request)
     {
         // Mengambil semua donasi yang dibuat oleh Donatur (donor_id tidak null) 
@@ -69,9 +65,7 @@ class ReceiverController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 3. CREATE REQUEST MAKANAN (POST)
-    // ==========================================
     public function createRequest(Request $request)
     {
         $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
@@ -112,9 +106,7 @@ class ReceiverController extends Controller
         ], 201);
     }
 
-    // ==========================================
     // 4. GET PROFILE & UPDATE PROFILE (RECEIVER)
-    // ==========================================
     public function getProfile(Request $request)
     {
         return response()->json([
@@ -123,9 +115,7 @@ class ReceiverController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 5. GET DETAIL FOOD (MASUK / REQUEST)
-    // ==========================================
     public function getFoodDetail(Request $request, $id)
     {
         $food = \App\Models\Food::find($id);
@@ -133,9 +123,7 @@ class ReceiverController extends Controller
         return response()->json(['status' => 'success', 'data' => $food], 200);
     }
 
-    // ==========================================
     // 6. TERIMA / AMBIL DONASI DARI DONATUR
-    // ==========================================
     public function acceptDonation(Request $request, $id)
     {
         $food = \App\Models\Food::where('_id', $id)->where('status', 'available')->first();
@@ -148,9 +136,7 @@ class ReceiverController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Donasi berhasil diterima! Menunggu relawan untuk mengantar.'], 200);
     }
 
-    // ==========================================
     // 7. UPDATE REQUEST MAKANAN (EDIT)
-    // ==========================================
     public function updateRequest(Request $request, $id)
     {
         $food = \App\Models\Food::where('_id', $id)->where('receiver_id', $request->user()->_id)->where('status', 'waiting_donor')->first();
@@ -182,9 +168,7 @@ class ReceiverController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Request berhasil diperbarui'], 200);
     }
 
-    // ==========================================
     // 8. DELETE REQUEST MAKANAN
-    // ==========================================
     public function deleteRequest(Request $request, $id)
     {
         $food = \App\Models\Food::where('_id', $id)->where('receiver_id', $request->user()->_id)->where('status', 'waiting_donor')->first();
@@ -196,9 +180,7 @@ class ReceiverController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Request berhasil dihapus'], 200);
     }
 
-    // ==========================================
     // 9. GET RIWAYAT PENERIMA (HISTORY)
-    // ==========================================
     public function history(Request $request)
     {
         // Ambil semua makanan yang receiver_id-nya adalah user ini
@@ -210,9 +192,7 @@ class ReceiverController extends Controller
         return response()->json(['status' => 'success', 'data' => $foods], 200);
     }
 
-    // ==========================================
     // 10. UPDATE PROFILE PENERIMA
-    // ==========================================
     public function updateProfile(Request $request)
     {
         $receiver = $request->user();
@@ -236,9 +216,7 @@ class ReceiverController extends Controller
         return response()->json(['status' => 'success', 'message' => 'Profil berhasil diperbarui!', 'data' => $receiver], 200);
     }
 
-    // ==========================================
     // 11. UPDATE SETTINGS PENERIMA
-    // ==========================================
     public function updateSettings(Request $request)
     {
         $receiver = $request->user();

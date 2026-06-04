@@ -8,9 +8,7 @@ use App\Models\Food;
 
 class VolunteerController extends Controller
 {
-    // ==========================================
     // 1. GET DASHBOARD STATS & AVAILABLE JOBS
-    // ==========================================
     public function dashboard(Request $request)
     {
         $volunteerId = $request->user()->_id;
@@ -40,9 +38,7 @@ class VolunteerController extends Controller
         ], 200);
     }
 
-    // ==========================================
     // 2. GET PROFILE
-    // ==========================================
     public function getProfile(Request $request)
     {
         return response()->json([

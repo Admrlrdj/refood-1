@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\VolunteerController;
 */
 
 // ==========================================
-// PUBLIC ROUTES (Tidak butuh Token)
+// PUBLIC ROUTES
 // ==========================================
 Route::post('/register/donor', [AuthController::class, 'registerDonor']);
 Route::post('/register/receiver', [AuthController::class, 'registerReceiver']);
@@ -23,14 +23,14 @@ Route::post('/login', [AuthController::class, 'login']);
 
 
 // ==========================================
-// PROTECTED ROUTES (Butuh Token Bearer dari Sanctum)
+// PROTECTED ROUTES
 // ==========================================
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Endpoint untuk Logout
+    // Endpoint Logout
     Route::post('/logout', [AuthController::class, 'logout']);
 
-    // Group Route untuk Donatur
+    // Group Route Donatur
     Route::prefix('donor')->group(function () {
         Route::get('/dashboard', [DonorController::class, 'dashboard']);
         Route::post('/foods', [DonorController::class, 'createDonation']);
@@ -38,7 +38,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/profile', [DonorController::class, 'getProfile']);
         Route::put('/profile', [DonorController::class, 'updateProfile']);
-
         Route::put('/settings', [DonorController::class, 'updateSettings']);
 
         Route::get('/foods/{id}', [DonorController::class, 'getDonation']);
@@ -69,9 +68,21 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/foods/request/{id}', [ReceiverController::class, 'deleteRequest']);
     });
 
-    // Group Route untuk Relawan
+    // Group Route untuk Relawan (Volunteer)
     Route::prefix('volunteer')->group(function () {
         Route::get('/dashboard', [VolunteerController::class, 'dashboard']);
+
+        // Riwayat Pengantaran (HISTORY)
+        Route::get('/history', [VolunteerController::class, 'history']);
+
+        // Profile & Settings
         Route::get('/profile', [VolunteerController::class, 'getProfile']);
+        Route::put('/profile', [VolunteerController::class, 'updateProfile']);
+        Route::put('/settings', [VolunteerController::class, 'updateSettings']);
+
+        // Detail & Aksi untuk Tugas Pengantaran (Jobs)
+        Route::get('/jobs/{id}', [VolunteerController::class, 'getJobDetail']);
+        Route::post('/jobs/{id}/accept', [VolunteerController::class, 'acceptJob']);
+        Route::post('/jobs/{id}/status', [VolunteerController::class, 'updateJobStatus']);
     });
 });

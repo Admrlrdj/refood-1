@@ -12,14 +12,14 @@ use App\Models\Volunteer;
 
 class AuthController extends Controller
 {
-    // ==========================================
     // 1. REGISTRASI
-    // ==========================================
+
+    // Register Donatur
     public function registerDonor(Request $request)
     {
         $validator = Validator::make($request->all(), [
             'name' => 'required|string|max:255',
-            'username' => 'required|string|max:50|unique:donors', // Username wajib & unik
+            'username' => 'required|string|max:50|unique:donors',
             'restaurant_name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:donors',
             'phone' => 'required|string',
@@ -33,14 +33,14 @@ class AuthController extends Controller
 
         $donor = Donor::create([
             'name' => $request->name,
-            'username' => strtolower(str_replace(' ', '', $request->username)), // Pastikan kecil & tanpa spasi
+            'username' => strtolower(str_replace(' ', '', $request->username)),
             'restaurant_name' => $request->restaurant_name,
             'email' => $request->email,
             'phone' => $request->phone,
             'address' => $request->address,
             'password' => Hash::make($request->password),
             'type' => 'general',
-            'is_verified' => false,
+            'is_verified' => true, // Set true sementara agar bisa langsung login
             'status' => 'offline',
         ]);
 
@@ -53,21 +53,18 @@ class AuthController extends Controller
         $validator = Validator::make($request->all(), [
             'name'            => 'required|string|max:255',
             'username'        => 'required|string|max:255|unique:receivers,username',
-            'type'            => 'required|string', // misal: Panti Asuhan, Komunitas
+            'type'            => 'required|string',
             'pic_name'        => 'required|string|max:255',
             'phone'           => 'required|string',
             'email'           => 'required|string|email|max:255|unique:receivers,email',
             'address'         => 'required|string',
             'capacity_people' => 'required|integer|min:1',
-            'need_level'      => 'required|string', // misal: Tinggi, Sedang, Rendah
+            'need_level'      => 'required|string',
             'password'        => 'required|string|min:6|confirmed',
         ]);
 
         if ($validator->fails()) {
-            return response()->json([
-                'status' => 'error',
-                'errors' => $validator->errors()
-            ], 422);
+            return response()->json(['status' => 'error', 'errors' => $validator->errors()], 422);
         }
 
         $receiver = Receiver::create([
@@ -81,19 +78,13 @@ class AuthController extends Controller
             'capacity_people' => $request->capacity_people,
             'need_level'      => $request->need_level,
             'password'        => Hash::make($request->password),
+            'is_verified'     => true, // Set true sementara agar bisa langsung login
         ]);
 
-        $token = $receiver->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'status'       => 'success',
-            'message'      => 'Registrasi Penerima Berhasil',
-            'access_token' => $token,
-            'token_type'   => 'Bearer',
-            'data'         => $receiver
-        ], 201);
+        return response()->json(['status' => 'success', 'message' => 'Registrasi Penerima Berhasil'], 201);
     }
 
+    // Register Relawan (Volunteer) Tanpa Collection User
     public function registerVolunteer(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -113,20 +104,20 @@ class AuthController extends Controller
             'username' => strtolower(str_replace(' ', '', $request->username)),
             'email' => $request->email,
             'phone' => $request->phone,
+            'address' => $request->address ?? '',
             'vehicle_type' => $request->vehicle_type ?? '',
             'vehicle_plate' => $request->vehicle_plate ?? '',
-            'address' => $request->address ?? '',
             'password' => Hash::make($request->password),
-            'is_verified' => false,
+            'verification_status' => 'verified',
+            'is_online' => false,
+            'is_verified' => true,
             'status' => 'offline',
         ]);
 
         return response()->json(['status' => 'success', 'message' => 'Registrasi Relawan berhasil!'], 201);
     }
 
-    // ==========================================
-    // 2. LOGIN (MENGGUNAKAN USERNAME)
-    // ==========================================
+    // 2. LOGIN
     public function login(Request $request)
     {
         $request->validate([
@@ -141,7 +132,6 @@ class AuthController extends Controller
             $usernameInput = strtolower(str_replace(' ', '', $request->username));
             $user = Donor::where('username', $usernameInput)->first();
         } elseif ($request->role === 'receiver') {
-            // Perbaikan: Receiver dicari sesuai input aslinya (tidak di-lowercase)
             $user = Receiver::where('username', $request->username)->first();
         } elseif ($request->role === 'volunteer') {
             $usernameInput = strtolower(str_replace(' ', '', $request->username));
@@ -152,8 +142,6 @@ class AuthController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Username atau Password salah.'], 401);
         }
 
-        // PERBAIKAN PENTING: Cek is_verified hanya jika kolomnya ada
-        // (Di tabel Receiver saat ini belum ada is_verified, jadi kita anggap default true)
         $isVerified = $user->is_verified ?? true;
         if (!$isVerified) {
             return response()->json(['status' => 'error', 'message' => 'Akun Anda sedang ditinjau oleh Admin.'], 403);
@@ -161,17 +149,19 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $userData = $user->toArray();
+        $userData['role'] = $request->role;
+
         return response()->json([
             'status' => 'success',
             'message' => 'Login berhasil',
-            'access_token' => $token,
+            'token' => $token,
+            'user' => $userData,
             'data' => $user
         ], 200);
     }
 
-    // ==========================================
     // 3. LOGOUT
-    // ==========================================
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
