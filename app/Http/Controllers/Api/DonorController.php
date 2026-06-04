@@ -15,30 +15,36 @@ class DonorController extends Controller
     {
         $donorId = $request->user()->_id;
 
-        // Menghitung statistik berdasarkan status makanan
-        // 'available' = Menunggu Donasi (belum diambil)
-        // 'on_delivery' / 'accepted' = Donasi Aktif (sedang diproses kurir)
-        // 'completed' / 'cancelled' = Riwayat (sudah selesai/gagal)
-
-        $menungguDonasi = Food::where('donor_id', $donorId)->where('status', 'available')->count();
-        $donasiAktif = Food::where('donor_id', $donorId)->whereIn('status', ['accepted', 'on_delivery'])->count();
-        $riwayat = Food::where('donor_id', $donorId)->whereIn('status', ['completed', 'cancelled'])->count();
-
-        // Mengambil 3 aktivitas terbaru
-        $recentActivities = Food::where('donor_id', $donorId)
+        // A. Ambil Donasi Aktif milik Donatur ini
+        $activeDonationsList = \App\Models\Food::where('donor_id', $donorId)
+            ->whereIn('status', ['pending', 'accepted', 'on_delivery'])
             ->orderBy('created_at', 'desc')
-            ->limit(3)
+            ->get();
+
+        $activeDonationsCount = $activeDonationsList->count();
+
+        $completedDonationsCount = \App\Models\Food::where('donor_id', $donorId)
+            ->where('status', 'completed')
+            ->count();
+
+        // B. Ambil Request Makanan dari Yayasan (Receiver) yang belum ada donaturnya
+        // Syarat: statusnya 'requested' dan belum ada donor_id
+        $yayasanRequests = \App\Models\Food::with('receiver')
+            ->where('status', 'requested')
+            ->whereNull('donor_id')
+            ->orderBy('created_at', 'desc')
+            ->take(10)
             ->get();
 
         return response()->json([
             'status' => 'success',
             'data' => [
                 'summary' => [
-                    'waiting' => $menungguDonasi,
-                    'active' => $donasiAktif,
-                    'history' => $riwayat,
+                    'active' => $activeDonationsCount,
+                    'completed' => $completedDonationsCount,
                 ],
-                'recent_activities' => $recentActivities
+                'active_donations' => $activeDonationsList, // <-- Ini yang hilang kemarin
+                'yayasan_requests' => $yayasanRequests
             ]
         ], 200);
     }
