@@ -9,32 +9,27 @@ use App\Models\Food;
 class DonorController extends Controller
 {
     // ==========================================
-    // 1. GET DASHBOARD (Statistik, Donasi Aktif, & Request Yayasan)
+    // 1. GET DASHBOARD DONATUR
     // ==========================================
     public function dashboard(Request $request)
     {
         $donorId = (string) $request->user()->_id;
 
-        // A. Ambil Donasi Aktif (Status: available, accepted, on_delivery)
-        $activeDonationsList = Food::where('donor_id', $donorId)
-            ->whereIn('status', ['available', 'accepted', 'on_delivery'])
+        // FIX MONGODB: Gunakan whereIn dengan status eksplisit agar data PASTI terbaca
+        $activeDonationsList = \App\Models\Food::where('donor_id', $donorId)
+            ->whereIn('status', ['available', 'pending', 'accepted', 'on_delivery'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // B. Ambil Request Yayasan (Status: waiting_donor)
-        $yayasanRequests = Food::with('receiver')
-            ->where('status', 'waiting_donor')
-            ->where(function ($query) {
-                $query->whereNull('donor_id')
-                    ->orWhere('donor_id', '')
-                    ->orWhereExists('donor_id', false);
-            })
+        // FIX MONGODB: Cari secara eksplisit status 'waiting_donor' atau 'requested'
+        $yayasanRequests = \App\Models\Food::with('receiver')
+            ->whereIn('status', ['waiting_donor', 'requested'])
             ->orderBy('created_at', 'desc')
-            ->take(10)
+            ->take(15)
             ->get();
 
         $activeDonationsCount = $activeDonationsList->count();
-        $completedDonationsCount = Food::where('donor_id', $donorId)
+        $completedDonationsCount = \App\Models\Food::where('donor_id', $donorId)
             ->where('status', 'completed')
             ->count();
 

@@ -9,22 +9,23 @@ use App\Models\Food;
 class ReceiverController extends Controller
 {
     // ==========================================
-    // 1. GET DASHBOARD
+    // 1. GET DASHBOARD PENERIMA (YAYASAN)
     // ==========================================
     public function dashboard(Request $request)
     {
         $receiverId = (string) $request->user()->_id;
 
-        // Makanan Masuk (Telah di-accept oleh relawan/donatur)
-        $incomingFoods = Food::with('donor')
+        // Makanan Masuk (Pasti memiliki donor_id dan status accepted/on_delivery)
+        $incomingFoods = \App\Models\Food::with('donor')
             ->where('receiver_id', $receiverId)
+            ->whereNotNull('donor_id')
             ->whereIn('status', ['accepted', 'on_delivery'])
             ->orderBy('updated_at', 'desc')
             ->get();
 
-        // Request Mandiri (Berstatus waiting_donor)
-        $activeRequests = Food::where('receiver_id', $receiverId)
-            ->where('status', 'waiting_donor')
+        // Request Mandiri (Status WAJIB waiting_donor atau requested)
+        $activeRequests = \App\Models\Food::where('receiver_id', $receiverId)
+            ->whereIn('status', ['waiting_donor', 'requested'])
             ->orderBy('created_at', 'desc')
             ->get();
 

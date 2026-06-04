@@ -1,155 +1,110 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\Donor;
 use App\Models\Food;
+use Illuminate\Http\Request;
 
 class DonorController extends Controller
 {
-    // ==========================================
-    // 1. GET DASHBOARD DONATUR
-    // ==========================================
-    public function dashboard(Request $request)
+    public function index(Request $request)
     {
-        $donorId = (string) $request->user()->_id;
+        $query = Donor::with(['foods'])->latest();
 
-        // FIX MONGODB: Gunakan whereIn dengan status eksplisit agar data PASTI terbaca
-        $activeDonationsList = \App\Models\Food::where('donor_id', $donorId)
-            ->whereIn('status', ['available', 'pending', 'accepted', 'on_delivery'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        // FIX MONGODB: Cari secara eksplisit status 'waiting_donor' atau 'requested'
-        $yayasanRequests = \App\Models\Food::with('receiver')
-            ->whereIn('status', ['waiting_donor', 'requested'])
-            ->orderBy('created_at', 'desc')
-            ->take(15)
-            ->get();
-
-        $activeDonationsCount = $activeDonationsList->count();
-        $completedDonationsCount = \App\Models\Food::where('donor_id', $donorId)
-            ->where('status', 'completed')
-            ->count();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'summary' => [
-                    'active' => $activeDonationsCount,
-                    'completed' => $completedDonationsCount,
-                ],
-                'active_donations' => $activeDonationsList,
-                'yayasan_requests' => $yayasanRequests
-            ]
-        ], 200);
-    }
-
-    // ==========================================
-    // 2. GET DETAIL DONASI
-    // ==========================================
-    public function getDonation(Request $request, $id)
-    {
-        // FIX: Kembali menggunakan find() agar ObjectID MongoDB terbaca
-        $food = Food::find($id);
-
-        if (!$food || (string) $food->donor_id !== (string) $request->user()->_id) {
-            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan.'], 404);
+        if ($request->filled('search')) {
+            $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        return response()->json(['status' => 'success', 'data' => $food], 200);
+        $donors = $query->paginate(10);
+        $allDonors = Donor::with('foods')->get();
+        $topDonor = $allDonors->sortByDesc(fn($d) => $d->foods ? $d->foods->count() : 0)->first();
+
+        $stats = [
+            'total'           => Donor::count(),
+            'active'          => $allDonors->filter(fn($d) => $d->foods && $d->foods->count() > 0)->count(),
+            'total_donations' => Food::count(),
+            'top_donor'       => $topDonor,
+        ];
+
+        return view('admin.donors.index', compact('donors', 'stats'));
     }
 
-    // ==========================================
-    // 3. PENUHI REQUEST YAYASAN
-    // ==========================================
-    public function fulfillRequest(Request $request, $id)
+    public function store(Request $request)
     {
-        $food = Food::find($id);
-
-        // FIX: Cukup cek apakah donor_id nya masih kosong
-        if (!$food || $food->donor_id !== null) {
-            return response()->json(['status' => 'error', 'message' => 'Permintaan ini sudah dipenuhi donatur lain.'], 400);
-        }
-
-        $food->donor_id = (string) $request->user()->_id;
-        $food->status = 'accepted';
-        $food->save();
-
-        return response()->json(['status' => 'success', 'message' => 'Berhasil memenuhi permintaan!'], 200);
-    }
-
-    // ==========================================
-    // 4. BUAT DONASI BARU
-    // ==========================================
-    public function createDonation(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'portion' => 'required',
+        $data = $request->validate([
+            'name'     => 'required|string|max:255',
+            'type'     => 'required|in:individual,corporate',
+            'pic_name' => 'nullable|string|max:255',
+            'phone'    => 'nullable|string|max:20',
+            'email'    => 'nullable|email|max:255',
+            'address'  => 'nullable|string|max:500',
         ]);
 
-        $food = Food::create([
-            'donor_id' => (string) $request->user()->_id,
-            'name' => $request->name,
-            'category' => $request->category ?? 'Umum',
-            'portion' => (string) $request->portion,
-            'note' => $request->note ?? '',
-            'photo_url' => $request->photo_url ?? null,
-            'collection_date' => $request->collection_date ?? null,
-            'status' => 'available',
+        Donor::create($data);
+        return redirect()->route('admin.donors.index')->with('success', 'Donor berhasil ditambahkan!');
+    }
+
+    public function show($id)
+    {
+        $donor = Donor::findOrFail($id);
+        $donor->load(['foods' => fn($q) => $q->with(['receiver', 'deliveries'])->latest()]);
+
+        return view('admin.donors.show', compact('donor'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $donor = Donor::findOrFail($id);
+        $data = $request->validate([
+            'name'     => 'required|string|max:255',
+            'type'     => 'required|in:individual,corporate',
+            'pic_name' => 'nullable|string|max:255',
+            'phone'    => 'nullable|string|max:20',
+            'email'    => 'nullable|email|max:255',
+            'address'  => 'nullable|string|max:500',
         ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Donasi berhasil dibuat', 'data' => $food], 201);
+        $donor->update($data);
+        return redirect()->route('admin.donors.index')->with('success', 'Donor berhasil diupdate!');
     }
 
-    // ==========================================
-    // 4. UPDATE DONASI
-    // ==========================================
-    public function updateDonation(Request $request, $id)
-    { /* opsional */
-    }
-
-    // ==========================================
-    // 5. BATALKAN/HAPUS DONASI
-    // ==========================================
-    public function deleteDonation(Request $request, $id)
+    public function destroy($id)
     {
-        $food = Food::find($id);
-        if ($food && (string) $food->donor_id === (string) $request->user()->_id) {
-            $food->delete();
-            return response()->json(['status' => 'success', 'message' => 'Donasi dibatalkan.']);
-        }
-        return response()->json(['status' => 'error', 'message' => 'Gagal menghapus.'], 400);
+        Donor::findOrFail($id)->delete();
+        return redirect()->route('admin.donors.index')->with('success', 'Donor berhasil dihapus!');
     }
 
-    public function history(Request $request)
+    public function history($id)
     {
-        $history = Food::where('donor_id', (string) $request->user()->_id)->orderBy('created_at', 'desc')->get();
-        return response()->json(['status' => 'success', 'data' => $history], 200);
+        $foods = Food::where('donor_id', $id)->with('deliveries')->latest()->take(20)->get();
+        $result = $foods->map(function ($food) {
+            $delivery = $food->deliveries->first();
+            return [
+                'food_name' => $food->name,
+                'status'    => $delivery->status ?? 'pending',
+                'date'      => $food->created_at->format('d M Y'),
+            ];
+        });
+        return response()->json($result);
     }
 
-    public function getProfile(Request $request)
+    public function verify($id)
     {
-        return response()->json(['status' => 'success', 'data' => $request->user()], 200);
+        $donor = Donor::findOrFail($id);
+        $donor->is_verified = true;
+        $donor->save();
+
+        return back()->with('success', 'Akun Donatur berhasil diverifikasi!');
     }
 
-    public function updateProfile(Request $request)
+    public function reject($id)
     {
-        $request->user()->update($request->only(['name', 'restaurant_name', 'phone', 'address']));
-        return response()->json(['status' => 'success', 'message' => 'Profil diperbarui']);
-    }
+        $donor = Donor::findOrFail($id);
+        $donor->is_verified = false;
+        $donor->save();
 
-    public function updateSettings(Request $request)
-    {
-        $user = $request->user();
-        if ($request->has('username')) $user->username = strtolower(str_replace(' ', '', $request->username));
-        if ($request->filled('new_password')) {
-            if (!\Illuminate\Support\Facades\Hash::check($request->old_password, $user->password)) return response()->json(['status' => 'error', 'message' => 'Password lama salah'], 400);
-            $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
-        }
-        $user->save();
-        return response()->json(['status' => 'success', 'message' => 'Pengaturan disimpan']);
+        return back()->with('success', 'Status Donatur diubah menjadi Belum Terverifikasi / Ditolak.');
     }
 }

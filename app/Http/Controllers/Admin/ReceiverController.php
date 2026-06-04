@@ -1,209 +1,118 @@
 <?php
 
-namespace App\Http\Controllers\Api;
+namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Receiver;
+use App\Models\Delivery;
 use Illuminate\Http\Request;
-use App\Models\Food;
 
 class ReceiverController extends Controller
 {
-    // ==========================================
-    // 1. GET DASHBOARD PENERIMA (YAYASAN)
-    // ==========================================
-    public function dashboard(Request $request)
+    public function index(Request $request)
     {
-        $receiverId = (string) $request->user()->_id;
+        $query = Receiver::with(['deliveries'])->latest();
 
-        // Makanan Masuk (Pasti memiliki donor_id dan status accepted/on_delivery)
-        $incomingFoods = \App\Models\Food::with('donor')
-            ->where('receiver_id', $receiverId)
-            ->whereNotNull('donor_id')
-            ->whereIn('status', ['accepted', 'on_delivery'])
-            ->orderBy('updated_at', 'desc')
-            ->get();
-
-        // Request Mandiri (Status WAJIB waiting_donor atau requested)
-        $activeRequests = \App\Models\Food::where('receiver_id', $receiverId)
-            ->whereIn('status', ['waiting_donor', 'requested'])
-            ->orderBy('created_at', 'desc')
-            ->get();
-
-        return response()->json([
-            'status' => 'success',
-            'data' => [
-                'incoming_foods' => $incomingFoods,
-                'active_requests' => $activeRequests,
-            ]
-        ], 200);
-    }
-
-    // ==========================================
-    // 2. GET AVAILABLE FOODS (FIX BUG 3: Method ini sebelumnya tidak ada)
-    // ==========================================
-    public function getAvailableFoods(Request $request)
-    {
-        $query = Food::with('donor')
-            ->whereNotNull('donor_id')
-            ->whereNull('receiver_id')
-            ->where('status', 'available')
-            ->orderBy('created_at', 'desc');
-
-        // Support pencarian nama
-        if ($request->has('search') && $request->search) {
+        if ($request->filled('search')) {
             $query->where('name', 'like', '%' . $request->search . '%');
         }
 
-        $foods = $query->get();
+        $receivers = $query->paginate(10);
+        $allReceivers = Receiver::with('deliveries')->get();
+        $topReceiver = $allReceivers->sortByDesc(fn($r) => $r->deliveries ? $r->deliveries->count() : 0)->first();
 
-        return response()->json(['status' => 'success', 'data' => $foods], 200);
+        $stats = [
+            'total'        => Receiver::count(),
+            'active'       => $allReceivers->filter(fn($r) => $r->deliveries && $r->deliveries->count() > 0)->count(),
+            'total_foods'  => Delivery::where('status', 'delivered')->count(),
+            'top_receiver' => $topReceiver,
+        ];
+
+        return view('admin.receivers.index', compact('receivers', 'stats'));
     }
 
-    // ==========================================
-    // 3. GET DETAIL MAKANAN / REQUEST
-    // ==========================================
-    public function getFoodDetail(Request $request, $id)
+    public function store(Request $request)
     {
-        $food = Food::with(['donor', 'volunteer', 'receiver'])->find($id);
-
-        if (!$food) {
-            return response()->json([
-                'status'  => 'error',
-                'message' => 'Data tidak ditemukan / ditarik oleh donatur.'
-            ], 404);
-        }
-
-        return response()->json(['status' => 'success', 'data' => $food], 200);
-    }
-
-    // ==========================================
-    // 4. ACCEPT DONATION (FIX BUG 4: Method ini sebelumnya tidak ada)
-    // ==========================================
-    public function acceptDonation(Request $request, $id)
-    {
-        $food = Food::find($id);
-
-        if (!$food) {
-            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan.'], 404);
-        }
-
-        if ($food->receiver_id !== null) {
-            return response()->json(['status' => 'error', 'message' => 'Donasi ini sudah diklaim receiver lain.'], 400);
-        }
-
-        if ($food->status !== 'available') {
-            return response()->json(['status' => 'error', 'message' => 'Donasi ini tidak tersedia.'], 400);
-        }
-
-        $food->receiver_id = (string) $request->user()->_id;
-        $food->status      = 'accepted';
-        $food->save();
-
-        return response()->json(['status' => 'success', 'message' => 'Berhasil menerima donasi!', 'data' => $food], 200);
-    }
-
-    // ==========================================
-    // 5. BUAT REQUEST MAKANAN BARU
-    // ==========================================
-    public function createRequest(Request $request)
-    {
-        $request->validate([
-            'name'    => 'required|string|max:255',
-            'portion' => 'required',
+        $data = $request->validate([
+            'name'            => 'required|string|max:255',
+            'type'            => 'required|in:orphanage,foundation,community,school,other',
+            'pic_name'        => 'nullable|string|max:255',
+            'phone'           => 'nullable|string|max:20',
+            'email'           => 'nullable|email|max:255',
+            'address'         => 'nullable|string|max:500',
+            'capacity_people' => 'nullable|integer|min:1',
+            'need_level'      => 'nullable|integer|min:0|max:100',
         ]);
 
-        $food = Food::create([
-            'receiver_id'     => (string) $request->user()->_id,
-            'name'            => $request->name,
-            'category'        => $request->category ?? 'Umum',
-            'portion'         => (string) $request->portion,
-            'note'            => $request->note ?? '',
-            'status'          => 'waiting_donor',
-            'donor_id'        => null,
-            'collection_date' => $request->collection_date ?? null,
-            'photo_url'       => null,
+        Receiver::create($data);
+        return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil ditambahkan!');
+    }
+
+    public function show($id)
+    {
+        $receiver = Receiver::findOrFail($id);
+        $receiver->load(['deliveries' => fn($q) => $q->with(['food', 'donor'])->latest()]);
+
+        return view('admin.receivers.show', compact('receiver'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $receiver = Receiver::findOrFail($id);
+        $data = $request->validate([
+            'name'            => 'required|string|max:255',
+            'type'            => 'required|in:orphanage,foundation,community,school,other',
+            'pic_name'        => 'nullable|string|max:255',
+            'phone'           => 'nullable|string|max:20',
+            'address'         => 'nullable|string|max:500',
+            'capacity_people' => 'nullable|integer|min:1',
+            'need_level'      => 'nullable|integer|min:0|max:100',
         ]);
 
-        return response()->json([
-            'status'  => 'success',
-            'message' => 'Request makanan berhasil diajukan!',
-            'data'    => $food
-        ], 201);
+        $receiver->update($data);
+        return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil diupdate!');
     }
 
-    // ==========================================
-    // 6. UPDATE REQUEST
-    // ==========================================
-    public function updateRequest(Request $request, $id)
+    public function destroy($id)
     {
-        $food = Food::find($id);
-
-        if (!$food || (string) $food->receiver_id !== (string) $request->user()->_id) {
-            return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan.'], 404);
-        }
-
-        // Hanya boleh edit kalau donor belum ada
-        if ($food->donor_id !== null) {
-            return response()->json(['status' => 'error', 'message' => 'Request sudah diambil donatur, tidak bisa diedit.'], 400);
-        }
-
-        $food->update($request->only(['name', 'category', 'portion', 'note', 'collection_date']));
-
-        return response()->json(['status' => 'success', 'message' => 'Request berhasil diperbarui.', 'data' => $food], 200);
+        Receiver::findOrFail($id)->delete();
+        return redirect()->route('admin.receivers.index')->with('success', 'Receiver berhasil dihapus!');
     }
 
-    // ==========================================
-    // 7. BATALKAN REQUEST
-    // ==========================================
-    public function deleteRequest(Request $request, $id)
+    public function json($id)
     {
-        $food = Food::find($id);
-
-        if ($food && (string) $food->receiver_id === (string) $request->user()->_id) {
-            $food->delete();
-            return response()->json(['status' => 'success', 'message' => 'Request berhasil dibatalkan.']);
-        }
-
-        return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan request.'], 400);
+        return response()->json(Receiver::findOrFail($id));
     }
 
-    // ==========================================
-    // 8. HISTORY
-    // ==========================================
-    public function history(Request $request)
+    public function detail($id)
     {
-        $history = Food::where('receiver_id', (string) $request->user()->_id)
-            ->orderBy('updated_at', 'desc')
-            ->get();
+        $receiver = Receiver::findOrFail($id);
+        $history = Delivery::where('receiver_id', $id)
+            ->with('food')->latest()->take(10)->get()
+            ->map(fn($d) => [
+                'food_name' => $d->food->name ?? '—',
+                'status'    => $d->status,
+                'date'      => $d->created_at->format('d M Y'),
+            ]);
 
-        return response()->json(['status' => 'success', 'data' => $history], 200);
+        return response()->json(array_merge($receiver->toArray(), ['history' => $history]));
     }
 
-    // ==========================================
-    // 9. PROFILE
-    // ==========================================
-    public function getProfile(Request $request)
+    public function verify($id)
     {
-        return response()->json(['status' => 'success', 'data' => $request->user()], 200);
+        $receiver = Receiver::findOrFail($id);
+        $receiver->is_verified = true;
+        $receiver->save();
+
+        return back()->with('success', 'Akun Yayasan berhasil diverifikasi!');
     }
 
-    public function updateProfile(Request $request)
+    public function reject($id)
     {
-        $request->user()->update($request->only(['name', 'pic_name', 'phone', 'address', 'capacity_people', 'need_level']));
-        return response()->json(['status' => 'success', 'message' => 'Profil berhasil diperbarui']);
-    }
+        $receiver = Receiver::findOrFail($id);
+        $receiver->is_verified = false;
+        $receiver->save();
 
-    public function updateSettings(Request $request)
-    {
-        $user = $request->user();
-        if ($request->has('username')) $user->username = $request->username;
-        if ($request->filled('new_password')) {
-            if (!\Illuminate\Support\Facades\Hash::check($request->old_password, $user->password)) {
-                return response()->json(['status' => 'error', 'message' => 'Password lama salah'], 400);
-            }
-            $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
-        }
-        $user->save();
-        return response()->json(['status' => 'success', 'message' => 'Pengaturan disimpan']);
+        return back()->with('success', 'Status Yayasan diubah menjadi Belum Terverifikasi / Ditolak.');
     }
 }
