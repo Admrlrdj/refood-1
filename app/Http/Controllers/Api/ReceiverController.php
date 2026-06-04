@@ -5,18 +5,14 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Food;
+use MongoDB\BSON\ObjectId;
 
 class ReceiverController extends Controller
 {
-    // ==========================================
-    // 1. GET DASHBOARD PENERIMA (YAYASAN)
-    // ==========================================
     public function dashboard(Request $request)
     {
         $receiverId = (string) $request->user()->_id;
 
-        // 1. MAKANAN MASUK TERKINI (Donasi dari donatur yang siap diklaim)
-        // Logika: Status 'available' dan belum ada receiver_id yang klaim
         $incomingFoods = Food::with('donor')
             ->where('status', 'available')
             ->where(function ($query) {
@@ -24,16 +20,16 @@ class ReceiverController extends Controller
                     ->orWhere('receiver_id', '');
             })
             ->orderBy('created_at', 'desc')
-            ->take(10) // Tampilkan 10 terbaru di beranda
+            ->take(10)
             ->get();
 
-        // 2. REQUEST AKTIF ANDA (Request makanan yang diajukan yayasan ini)
-        $activeRequests = Food::where('receiver_id', $receiverId)
-            ->whereIn('status', ['waiting_donor', 'requested'])
+        // Tampilkan juga makanan yang sudah diklaim (accepted & on_delivery)
+        $activeRequests = Food::with('donor')
+            ->where('receiver_id', $receiverId)
+            ->whereIn('status', ['waiting_donor', 'requested', 'accepted', 'on_delivery'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        // 3. MENGHITUNG SUMMARY (Untuk 3 Card di atas)
         $receivedCount = Food::where('receiver_id', $receiverId)
             ->where('status', 'completed')
             ->count();
@@ -45,7 +41,7 @@ class ReceiverController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'incoming_foods' => $incomingFoods, // Sekarang berisi donasi yang available!
+                'incoming_foods' => $incomingFoods,
                 'active_requests' => $activeRequests,
                 'summary' => [
                     'received' => $receivedCount,
@@ -56,33 +52,23 @@ class ReceiverController extends Controller
         ], 200);
     }
 
-    // ==========================================
-    // 2. GET DETAIL MAKANAN / REQUEST
-    // ==========================================
-    public function getFoodDetail(Request $request, $id)
+    public function getAvailableFoods(Request $request)
     {
-        // PENTING: Gunakan find($id) agar string ID otomatis jadi ObjectID MongoDB
-        $food = Food::with(['donor', 'volunteer', 'receiver'])->find($id);
+        $foods = Food::with('donor')
+            ->where('status', 'available')
+            ->where(function ($query) {
+                $query->whereNull('receiver_id')
+                    ->orWhere('receiver_id', '');
+            })
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        if (!$food) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'Data tidak ditemukan / ditarik oleh donatur.'
-            ], 404);
-        }
-
-        return response()->json(['status' => 'success', 'data' => $food], 200);
+        return response()->json(['status' => 'success', 'data' => $foods], 200);
     }
 
-    // ==========================================
-    // 3. BUAT REQUEST MAKANAN BARU
-    // ==========================================
     public function createRequest(Request $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'portion' => 'required',
-        ]);
+        $request->validate(['name' => 'required|string', 'portion' => 'required']);
 
         $food = Food::create([
             'receiver_id' => (string) $request->user()->_id,
@@ -90,81 +76,106 @@ class ReceiverController extends Controller
             'category' => $request->category ?? 'Umum',
             'portion' => (string) $request->portion,
             'note' => $request->note ?? '',
-            'status' => 'waiting_donor', // Status awal request SESUAI DB kamu
-            'donor_id' => null,
+            'status' => 'waiting_donor',
         ]);
 
-        return response()->json(['status' => 'success', 'message' => 'Request makanan berhasil diajukan!', 'data' => $food], 201);
+        return response()->json(['status' => 'success', 'message' => 'Request berhasil dibuat!', 'data' => $food], 201);
     }
 
-    // ==========================================
-    // 4. BATALKAN REQUEST
-    // ==========================================
-    public function deleteRequest(Request $request, $id)
+    public function getFoodDetail(Request $request, $id)
     {
-        $food = Food::find($id);
-
-        if ($food && (string) $food->receiver_id === (string) $request->user()->_id) {
-            $food->delete();
-            return response()->json(['status' => 'success', 'message' => 'Request berhasil dibatalkan.']);
+        try {
+            $objectId = new ObjectId($id);
+            $food = Food::with('donor')->where('_id', $objectId)->first();
+            if (!$food) return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan.'], 404);
+            return response()->json(['status' => 'success', 'data' => $food], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Format ID salah.'], 500);
         }
-
-        return response()->json(['status' => 'error', 'message' => 'Gagal membatalkan request.'], 400);
     }
 
     // ==========================================
-    // FITUR TAMBAHAN (CARI & TERIMA MAKANAN)
+    // FUNGSI AMBIL DONASI OLEH YAYASAN
     // ==========================================
-    public function getAvailableFoods(Request $request)
-    {
-        $foods = Food::with('donor')
-            ->where('status', 'available')
-            ->whereNull('receiver_id')
-            ->orderBy('created_at', 'desc')
-            ->get();
-        return response()->json(['status' => 'success', 'data' => $foods], 200);
-    }
-
     public function acceptDonation(Request $request, $id)
     {
-        $food = Food::find($id);
-        if (!$food || $food->status !== 'available') return response()->json(['status' => 'error', 'message' => 'Donasi tidak tersedia'], 400);
-        $food->receiver_id = (string) $request->user()->_id;
-        $food->status = 'accepted';
-        $food->save();
-        return response()->json(['status' => 'success', 'message' => 'Donasi berhasil diterima'], 200);
+        try {
+            $objectId = new ObjectId($id);
+            $food = Food::where('_id', $objectId)->first();
+
+            if (!$food || $food->status !== 'available') {
+                return response()->json(['status' => 'error', 'message' => 'Donasi sudah diambil yayasan lain atau tidak tersedia.'], 400);
+            }
+
+            $food->receiver_id = (string) $request->user()->_id;
+            $food->status = 'accepted';
+            $food->save();
+
+            return response()->json(['status' => 'success', 'message' => 'Donasi berhasil diklaim! Relawan akan segera menjemputnya.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Format ID salah.'], 500);
+        }
     }
 
     public function updateRequest(Request $request, $id)
-    { /* Opsional */
+    {
+        try {
+            $objectId = new ObjectId($id);
+            $food = Food::where('_id', $objectId)->first();
+
+            if (!$food || (string) $food->receiver_id !== (string) $request->user()->_id) {
+                return response()->json(['status' => 'error', 'message' => 'Data tidak ditemukan atau akses ditolak.'], 404);
+            }
+
+            if (!in_array($food->status, ['waiting_donor', 'requested'])) {
+                return response()->json(['status' => 'error', 'message' => 'Request sudah diproses donatur.'], 400);
+            }
+
+            $food->name = $request->name;
+            $food->portion = (string) $request->portion;
+            $food->note = $request->note ?? $food->note;
+            $food->save();
+
+            return response()->json(['status' => 'success', 'message' => 'Request diperbarui!', 'data' => $food], 200);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Format ID salah.'], 500);
+        }
     }
 
-    // ==========================================
-    // 5. HISTORY, PROFILE & SETTINGS
-    // ==========================================
+    public function deleteRequest(Request $request, $id)
+    {
+        try {
+            $objectId = new ObjectId($id);
+            $food = Food::where('_id', $objectId)->first();
+
+            if ($food && (string) $food->receiver_id === (string) $request->user()->_id) {
+                $food->delete();
+                return response()->json(['status' => 'success', 'message' => 'Request dibatalkan.']);
+            }
+            return response()->json(['status' => 'error', 'message' => 'Gagal menghapus.'], 400);
+        } catch (\Exception $e) {
+            return response()->json(['status' => 'error', 'message' => 'Format ID salah.'], 500);
+        }
+    }
+
     public function history(Request $request)
     {
-        $receiverId = (string) $request->user()->_id;
-        $history = Food::where('receiver_id', $receiverId)->orderBy('updated_at', 'desc')->get();
+        $history = Food::where('receiver_id', (string) $request->user()->_id)->orderBy('created_at', 'desc')->get();
         return response()->json(['status' => 'success', 'data' => $history], 200);
     }
-
     public function getProfile(Request $request)
     {
         return response()->json(['status' => 'success', 'data' => $request->user()], 200);
     }
-
     public function updateProfile(Request $request)
     {
-        $user = $request->user();
-        $user->update($request->only(['name', 'pic_name', 'phone', 'address', 'capacity_people', 'need_level']));
-        return response()->json(['status' => 'success', 'message' => 'Profil berhasil diperbarui']);
+        $request->user()->update($request->only(['name', 'pic_name', 'phone', 'address']));
+        return response()->json(['status' => 'success', 'message' => 'Profil diperbarui']);
     }
-
     public function updateSettings(Request $request)
     {
         $user = $request->user();
-        if ($request->has('username')) $user->username = $request->username;
+        if ($request->has('username')) $user->username = strtolower(str_replace(' ', '', $request->username));
         if ($request->filled('new_password')) {
             if (!\Illuminate\Support\Facades\Hash::check($request->old_password, $user->password)) return response()->json(['status' => 'error', 'message' => 'Password lama salah'], 400);
             $user->password = \Illuminate\Support\Facades\Hash::make($request->new_password);
